@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZüriHub – Kanton Zürich Verzeichnis</title>
+
+<!-- Google Maps -->
+<script>
+  // API Key wird beim Laden gesetzt
+  window.GMAPS_KEY = 'AIzaSyB1djuoI4by6_R_FZRuLfSY3Yp2H6m2bcA';
+</script>
+<script async defer id="gmaps-script"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+/* ─── Reset & Foundation ──────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #111116;
+  --bg-card: #16161c;
+  --bg-card-hover: #1c1c24;
+  --bg-elevated: #1e1e28;
+  --text-primary: #eaeaf0;
+  --text-secondary: #8888a0;
+  --text-muted: #555570;
+  --accent-gold: #d4a843;
+  --accent-gold-dim: #a08030;
+  --accent-red: #c44040;
+  --accent-green: #40a860;
+  --accent-blue: #4080c4;
+  --border: #222230;
+  --border-light: #2a2a38;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.4);
+  --shadow-hover: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-popup: 0 12px 48px rgba(0,0,0,0.7);
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent-gold); text-decoration: none; transition: color var(--transition); }
+a:hover { color: var(--text-primary); }
+
+/* ─── Loading Screen ──────────────────────────────────────────────────── */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg-primary);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.5s ease;
+}
+#loading-screen.hidden { opacity: 0; pointer-events: none; }
+#loading-screen h1 {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  color: var(--accent-gold);
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
+}
+.loading-bar {
+  width: 200px; height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.loading-bar-fill {
+  height: 100%; width: 0;
+  background: var(--accent-gold);
+  animation: loadBar 1.5s ease-in-out forwards;
+}
+@keyframes loadBar { to { width: 100%; } }
+
+/* ─── Navigation ──────────────────────────────────────────────────────── */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,12,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--accent-gold);
+  display: flex; align-items: center; gap: 0.5rem;
+  cursor: pointer;
+}
+.nav-brand span { font-style: italic; opacity: 0.6; font-size: 0.9rem; color: var(--text-secondary); }
+.nav-tabs { display: flex; gap: 0; }
+.nav-tab {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: none; border: none;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition);
+}
+.nav-tab:hover { color: var(--text-primary); }
+.nav-tab.active { color: var(--accent-gold); }
+.nav-tab.active::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 1rem; right: 1rem;
+  height: 2px; background: var(--accent-gold);
+  border-radius: 1px;
+}
+.nav-stats {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Main Layout ─────────────────────────────────────────────────────── */
+.app-container {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  height: 100vh;
+  padding-top: 60px;
+}
+
+/* ─── Sidebar / List Panel ────────────────────────────────────────────── */
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Filter Bar */
+.filter-bar {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 0.7rem;
+  background: var(--bg-primary);
+}
+.filter-row {
+  display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  width: 100%;
+  margin-bottom: -0.3rem;
+}
+.filter-chip {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.filter-chip:hover {
+  border-color: var(--accent-gold-dim);
+  color: var(--text-primary);
+}
+.filter-chip.active {
+  border-color: var(--accent-gold);
+  background: rgba(212,168,67,0.1);
+  color: var(--accent-gold);
+}
+.filter-chip.danger.active {
+  border-color: var(--accent-red);
+  background: rgba(196,64,64,0.1);
+  color: var(--accent-red);
+}
+
+/* Sort Bar */
+.sort-bar {
+  padding: 0.6rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-secondary);
+}
+.sort-select {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.result-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Place List */
+.place-list {
+  flex: 1;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.place-list::-webkit-scrollbar { width: 5px; }
+.place-list::-webkit-scrollbar-track { background: transparent; }
+.place-list::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+.place-card {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.place-card:hover, .place-card.highlighted {
+  background: var(--bg-card-hover);
+}
+.place-card.is-top {
+  border-left: 3px solid var(--accent-gold);
+}
+.place-card.is-bottom {
+  border-left: 3px solid var(--accent-red);
+}
+.place-card-rank {
+  position: absolute;
+  top: 0.8rem; right: 1rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+}
+.place-card-rank.top {
+  background: rgba(212,168,67,0.15);
+  color: var(--accent-gold);
+}
+.place-card-rank.bottom {
+  background: rgba(196,64,64,0.15);
+  color: var(--accent-red);
+}
+.place-card-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+  padding-right: 4rem;
+  line-height: 1.3;
+}
+.place-card-address {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+.place-card-meta {
+  display: flex; align-items: center; gap: 0.8rem;
+  font-size: 0.8rem;
+}
+.stars { color: var(--accent-gold); display: flex; align-items: center; gap: 0.2rem; }
+.stars .val { font-weight: 700; }
+.review-count { color: var(--text-muted); font-size: 0.75rem; }
+.trade-badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(64,128,196,0.12);
+  color: var(--accent-blue);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Map Container ───────────────────────────────────────────────────── */
+.map-container {
+  position: relative;
+  overflow: hidden;
+}
+#map { width: 100%; height: 100%; }
+
+/* Map hover info card */
+.map-info-card {
+  position: absolute;
+  z-index: 50;
+  width: 320px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popup);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.map-info-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.info-card-photo {
+  width: 100%; height: 140px;
+  object-fit: cover;
+  display: block;
+  background: var(--bg-card);
+}
+.info-card-body { padding: 0.9rem 1rem; }
+.info-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+.info-card-address {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+.info-card-meta {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.info-card-stars {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+.info-card-stars svg { width: 14px; height: 14px; }
+.info-card-reviews {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.info-card-link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  font-weight: 500;
+  pointer-events: auto;
+}
+.info-card-link:hover { color: var(--text-primary); }
+
+/* ─── Rankings Overlay ────────────────────────────────────────────────── */
+.rankings-panel {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 300px; max-height: calc(100% - 20px);
+  background: rgba(10,10,12,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  z-index: 40;
+  display: none;
+}
+.rankings-panel.visible { display: block; }
+.rankings-header {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.rankings-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--accent-gold);
+}
+.rankings-close {
+  background: none; border: none;
+  color: var(--text-secondary); cursor: pointer;
+  font-size: 1.2rem;
+}
+.rankings-body {
+  padding: 0.6rem;
+  overflow-y: auto;
+  max-height: 500px;
+}
+.ranking-section {
+  margin-bottom: 0.8rem;
+}
+.ranking-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.3rem 0.5rem;
+}
+.ranking-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  font-size: 0.8rem;
+}
+.ranking-item:hover { background: var(--bg-card-hover); }
+.ranking-pos {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+  border-radius: 50%;
+  background: rgba(212,168,67,0.15);
+  color: var(--accent-gold);
+  flex-shrink: 0;
+}
+.ranking-pos.gold { background: var(--accent-gold); color: var(--bg-primary); }
+.ranking-name { flex: 1; font-weight: 500; }
+.ranking-rating { color: var(--accent-gold); font-weight: 700; font-size: 0.8rem; }
+
+/* Toggle button */
+.rankings-toggle {
+  position: absolute;
+  top: 10px; right: 10px;
+  z-index: 35;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(10,10,12,0.85);
+  backdrop-filter: blur(12px);
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold-dim);
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all var(--transition);
+}
+.rankings-toggle:hover {
+  background: rgba(212,168,67,0.15);
+}
+
+/* ─── Welcome / Landing ───────────────────────────────────────────────── */
+.welcome-view {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 3rem;
+}
+.welcome-view h1 {
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  color: var(--accent-gold);
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+}
+.welcome-view h1 em { font-style: italic; opacity: 0.7; }
+.welcome-view p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  max-width: 460px;
+  margin-bottom: 2rem;
+}
+.welcome-cards {
+  display: flex; gap: 1.5rem;
+}
+.welcome-card {
+  width: 200px;
+  padding: 2rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+.welcome-card:hover {
+  border-color: var(--accent-gold-dim);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+.welcome-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+}
+.welcome-card-title {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+.welcome-card-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50% 50%;
+  }
+  .sidebar { order: 2; }
+  .map-container { order: 1; }
+  .rankings-panel { width: 260px; }
+  .welcome-cards { flex-direction: column; }
+}
+@media (max-width: 500px) {
+  .filter-bar { padding: 0.7rem 0.8rem; }
+  .place-card { padding: 0.8rem; }
+  .top-nav { padding: 0 1rem; }
+  .nav-brand { font-size: 1.3rem; }
+}
+
+/* ─── Animations ──────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeUp 0.3s ease forwards;
+}
+
+/* ─── Star SVG helpers ────────────────────────────────────────────────── */
+.star-icon {
+  width: 13px; height: 13px;
+  fill: var(--accent-gold);
+  flex-shrink: 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <h1>ZüriHub</h1>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- Navigation -->
+<nav class="top-nav">
+  <div class="nav-brand" onclick="showWelcome()">
+    ZüriHub <span>Kanton Zürich</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab" data-view="welcome" onclick="showWelcome()">Start</button>
+    <button class="nav-tab" data-view="gastro" onclick="loadCategory('gastro')">Gastro</button>
+    <button class="nav-tab" data-view="handwerker" onclick="loadCategory('handwerker')">Handwerker</button>
+  </div>
+  <div class="nav-stats" id="nav-stats"></div>
+</nav>
+
+<!-- App Container -->
+<div class="app-container" id="app-container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Filter Bar (hidden on welcome) -->
+    <div class="filter-bar" id="filter-bar" style="display:none;">
+      <div class="filter-label">Branche</div>
+      <div class="filter-row" id="trade-filters"></div>
+      <div class="filter-label">Bewertung</div>
+      <div class="filter-row" id="rating-filters">
+        <button class="filter-chip" data-rating="5" onclick="toggleRatingFilter(5)">★ 5</button>
+        <button class="filter-chip" data-rating="4" onclick="toggleRatingFilter(4)">★ 4+</button>
+        <button class="filter-chip" data-rating="3" onclick="toggleRatingFilter(3)">★ 3+</button>
+        <button class="filter-chip danger" data-rating="2" onclick="toggleRatingFilter(2)">★ < 2</button>
+      </div>
+    </div>
+
+    <!-- Sort Bar (hidden on welcome) -->
+    <div class="sort-bar" id="sort-bar" style="display:none;">
+      <select class="sort-select" id="sort-select" onchange="applySort()">
+        <option value="rating-desc">Beste Bewertung</option>
+        <option value="rating-asc">Schlechteste Bewertung</option>
+        <option value="reviews-desc">Meiste Bewertungen</option>
+        <option value="reviews-asc">Wenigste Bewertungen</option>
+        <option value="name-asc">Name A–Z</option>
+      </select>
+      <span class="result-count" id="result-count"></span>
+    </div>
+
+    <!-- Place List / Welcome -->
+    <div class="place-list" id="place-list">
+      <div class="welcome-view" id="welcome-view">
+        <h1>Züri<em>Hub</em></h1>
+        <p>Das elitäre Verzeichnis für den Kanton Zürich. Nur Betriebe mit mindestens 100 Google-Bewertungen – transparent, filtierbar, kartenbasiert.</p>
+        <div class="welcome-cards">
+          <div class="welcome-card" onclick="loadCategory('gastro')">
+            <div class="welcome-card-icon">🍽</div>
+            <div class="welcome-card-title">Gastronomie</div>
+            <div class="welcome-card-sub">Restaurants · Bars · Cafés · Bäckereien</div>
+          </div>
+          <div class="welcome-card" onclick="loadCategory('handwerker')">
+            <div class="welcome-card-icon">🔧</div>
+            <div class="welcome-card-title">Handwerker</div>
+            <div class="welcome-card-sub">Elektriker · Maler · Schreiner · Sanitär</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Map -->
+  <div class="map-container" id="map-container">
+    <div id="map"></div>
+    <button class="rankings-toggle" id="rankings-toggle" onclick="toggleRankings()" style="display:none;">🏆 Ranglisten</button>
+    <div class="rankings-panel" id="rankings-panel">
+      <div class="rankings-header">
+        <div class="rankings-title">Ranglisten</div>
+        <button class="rankings-close" onclick="toggleRankings()">✕</button>
+      </div>
+      <div class="rankings-body" id="rankings-body"></div>
+    </div>
+    <!-- Hover info card -->
+    <div class="map-info-card" id="map-info-card">
+      <img class="info-card-photo" id="info-card-photo" src="" alt="" onerror="this.style.display='none'">
+      <div class="info-card-body">
+        <div class="info-card-name" id="info-card-name"></div>
+        <div class="info-card-address" id="info-card-address"></div>
+        <div class="info-card-meta">
+          <div class="info-card-stars" id="info-card-stars"></div>
+          <div class="info-card-reviews" id="info-card-reviews"></div>
+        </div>
+        <a class="info-card-link" id="info-card-link" href="#" target="_blank" rel="noopener">
+          Auf Google Maps öffnen →
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ZüriHub – Core Application Logic
+// ═══════════════════════════════════════════════════════════════════════════
+
+const APP = {
+  map: null,
+  markers: [],
+  infoCard: null,
+  currentCategory: null,
+  rawData: null,
+  filteredData: [],
+  activeTradeFilters: new Set(),
+  activeRatingFilter: null,
+  currentSort: 'rating-desc',
+  markerMap: {},           // placeId → marker
+  highlightedMarker: null,
+  rankingsVisible: false,
+};
+
+// Star SVG template
+const STAR_SVG = `<svg class="star-icon" viewBox="0 0 20 20"><path d="M10 1l2.39 4.84L17.82 6.9l-3.91 3.81.92 5.39L10 13.63l-4.83 2.54.92-5.39L2.18 6.9l5.43-.79z"/></svg>`;
+
+// ─── Google Maps Init ────────────────────────────────────────────────────
+
+function initGoogleMaps() {
+  const script = document.getElementById('gmaps-script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GMAPS_KEY}&callback=onMapsReady&libraries=marker`;
+}
+
+function onMapsReady() {
+  APP.map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 47.3769, lng: 8.5417 }, // Zürich Zentrum
+    zoom: 11,
+    styles: getMapStyle(),
+    disableDefaultUI: false,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+  });
+
+  APP.infoCard = document.getElementById('map-info-card');
+
+  // Click on map closes info card
+  APP.map.addListener('click', () => hideInfoCard());
+
+  // Hide loading screen
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+  }, 1200);
+}
+
+function getMapStyle() {
+  return [
+    { elementType: "geometry", stylers: [{ color: "#1a1a2e" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a2e" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#555577" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#25253e" }] },
+    { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#555577" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e0e1a" }] },
+    { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#334" }] },
+    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1e1e32" }] },
+    { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#555577" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
+    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2a2a40" }] },
+    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#7777aa" }] },
+  ];
+}
+
+
+// ─── Data Loading ────────────────────────────────────────────────────────
+
+async function loadCategory(category) {
+  if (APP.currentCategory === category && APP.rawData) {
+    // Already loaded, just switch view
+    return;
+  }
+
+  APP.currentCategory = category;
+  updateNavTabs(category);
+
+  // Show loading state in list
+  const listEl = document.getElementById('place-list');
+  listEl.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text-muted);">Lade Daten...</div>';
+  document.getElementById('welcome-view')?.remove();
+
+  try {
+    const resp = await fetch(`data/${category}.json`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    APP.rawData = await resp.json();
+  } catch (err) {
+    console.error('Datenfehler:', err);
+    listEl.innerHTML = `
+      <div style="padding:2rem;text-align:center;">
+        <p style="color:var(--accent-red);margin-bottom:1rem;">Daten konnten nicht geladen werden.</p>
+        <p style="color:var(--text-muted);font-size:0.8rem;">
+          Stelle sicher, dass <code>data/${category}.json</code> existiert.<br>
+          Führe zuerst <code>python scraper.py</code> aus.
+        </p>
+      </div>`;
+    return;
+  }
+
+  // Show filter/sort controls
+  document.getElementById('filter-bar').style.display = '';
+  document.getElementById('sort-bar').style.display = '';
+  document.getElementById('rankings-toggle').style.display = '';
+
+  // Update stats
+  const meta = APP.rawData.metadata;
+  document.getElementById('nav-stats').textContent =
+    `${meta.totalResults} Betriebe · ≥${meta.minReviews} Bewertungen`;
+
+  // Build trade filter chips
+  buildTradeFilters(APP.rawData.places);
+
+  // Reset filters
+  APP.activeTradeFilters.clear();
+  APP.activeRatingFilter = null;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('sort-select').value = 'rating-desc';
+  APP.currentSort = 'rating-desc';
+
+  // Apply and render
+  applyFilters();
+  buildRankingsPanel();
+}
+
+
+// ─── Trade Filter Chips ──────────────────────────────────────────────────
+
+function buildTradeFilters(places) {
+  const trades = {};
+  places.forEach(p => {
+    trades[p.trade] = (trades[p.trade] || 0) + 1;
+  });
+
+  const container = document.getElementById('trade-filters');
+  container.innerHTML = '';
+
+  // Sort by count descending
+  const sorted = Object.entries(trades).sort((a, b) => b[1] - a[1]);
+
+  // "Alle" chip
+  const allChip = document.createElement('button');
+  allChip.className = 'filter-chip active';
+  allChip.textContent = `Alle (${places.length})`;
+  allChip.onclick = () => {
+    APP.activeTradeFilters.clear();
+    container.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    allChip.classList.add('active');
+    applyFilters();
+  };
+  container.appendChild(allChip);
+
+  sorted.forEach(([trade, count]) => {
+    const chip = document.createElement('button');
+    chip.className = 'filter-chip';
+    chip.dataset.trade = trade;
+    chip.textContent = `${trade} (${count})`;
+    chip.onclick = () => toggleTradeFilter(trade, chip, allChip);
+    container.appendChild(chip);
+  });
+}
+
+function toggleTradeFilter(trade, chipEl, allChip) {
+  if (APP.activeTradeFilters.has(trade)) {
+    APP.activeTradeFilters.delete(trade);
+    chipEl.classList.remove('active');
+  } else {
+    APP.activeTradeFilters.add(trade);
+    chipEl.classList.add('active');
+    allChip.classList.remove('active');
+  }
+
+  if (APP.activeTradeFilters.size === 0) {
+    allChip.classList.add('active');
+  }
+
+  applyFilters();
+}
+
+
+// ─── Rating Filters ──────────────────────────────────────────────────────
+
+function toggleRatingFilter(level) {
+  const chip = document.querySelector(`.filter-chip[data-rating="${level}"]`);
+  const wasActive = chip.classList.contains('active');
+
+  // Deactivate all rating chips
+  document.querySelectorAll('#rating-filters .filter-chip').forEach(c => c.classList.remove('active'));
+
+  if (wasActive) {
+    APP.activeRatingFilter = null;
+  } else {
+    chip.classList.add('active');
+    APP.activeRatingFilter = level;
+  }
+
+  applyFilters();
+}
+
+
+// ─── Filter + Sort Engine ────────────────────────────────────────────────
+
+function applyFilters() {
+  if (!APP.rawData) return;
+
+  let places = [...APP.rawData.places];
+
+  // Trade filter
+  if (APP.activeTradeFilters.size > 0) {
+    places = places.filter(p => APP.activeTradeFilters.has(p.trade));
+  }
+
+  // Rating filter
+  if (APP.activeRatingFilter !== null) {
+    if (APP.activeRatingFilter === 2) {
+      // "< 2 Sterne" – schlecht bewertete
+      places = places.filter(p => p.rating < 2.0);
+    } else if (APP.activeRatingFilter === 5) {
+      places = places.filter(p => p.rating >= 4.8);
+    } else {
+      places = places.filter(p => p.rating >= APP.activeRatingFilter);
+    }
+  }
+
+  APP.filteredData = places;
+  applySort();
+}
+
+function applySort() {
+  const sortVal = document.getElementById('sort-select').value;
+  APP.currentSort = sortVal;
+
+  const comparators = {
+    'rating-desc': (a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount,
+    'rating-asc': (a, b) => a.rating - b.rating || b.reviewCount - a.reviewCount,
+    'reviews-desc': (a, b) => b.reviewCount - a.reviewCount,
+    'reviews-asc': (a, b) => a.reviewCount - b.reviewCount,
+    'name-asc': (a, b) => a.name.localeCompare(b.name, 'de'),
+  };
+
+  APP.filteredData.sort(comparators[sortVal] || comparators['rating-desc']);
+  renderList();
+  renderMarkers();
+}
+
+
+// ─── List Rendering ──────────────────────────────────────────────────────
+
+function renderList() {
+  const container = document.getElementById('place-list');
+  container.innerHTML = '';
+
+  document.getElementById('result-count').textContent =
+    `${APP.filteredData.length} Ergebnisse`;
+
+  if (APP.filteredData.length === 0) {
+    container.innerHTML = `
+      <div style="padding:3rem;text-align:center;color:var(--text-muted);">
+        Keine Betriebe mit diesen Filtern gefunden.
+      </div>`;
+    return;
+  }
+
+  // Determine rankings for highlighting
+  const rankings = APP.rawData.rankings || {};
+  const topIds = new Set();
+  const bottomIds = new Set();
+  Object.values(rankings).forEach(r => {
+    (r.top_rated || []).forEach(id => topIds.add(id));
+    (r.worst_rated || []).forEach(id => bottomIds.add(id));
+  });
+
+  const fragment = document.createDocumentFragment();
+
+  APP.filteredData.forEach((place, idx) => {
+    const card = document.createElement('div');
+    card.className = 'place-card animate-in';
+    card.style.animationDelay = `${Math.min(idx * 0.02, 0.5)}s`;
+    card.dataset.placeId = place.id;
+
+    const isTop = topIds.has(place.id);
+    const isBottom = bottomIds.has(place.id);
+    if (isTop) card.classList.add('is-top');
+    if (isBottom) card.classList.add('is-bottom');
+
+    let rankBadge = '';
+    if (isTop) {
+      rankBadge = '<div class="place-card-rank top">TOP</div>';
+    } else if (isBottom) {
+      rankBadge = '<div class="place-card-rank bottom">WARNUNG</div>';
+    }
+
+    card.innerHTML = `
+      ${rankBadge}
+      <div class="place-card-name">${escHtml(place.name)}</div>
+      <div class="place-card-address">${escHtml(place.address)}</div>
+      <div class="place-card-meta">
+        <div class="stars">${STAR_SVG}<span class="val">${place.rating.toFixed(1)}</span></div>
+        <span class="review-count">${place.reviewCount.toLocaleString('de-CH')} Bewertungen</span>
+        <span class="trade-badge">${escHtml(place.trade)}</span>
+      </div>
+    `;
+
+    // Hover → highlight marker + show info card
+    card.addEventListener('mouseenter', () => highlightPlace(place));
+    card.addEventListener('mouseleave', () => unhighlightPlace());
+
+    // Click → pan to place + open GMB
+    card.addEventListener('click', () => {
+      if (APP.map && place.lat && place.lng) {
+        APP.map.panTo({ lat: place.lat, lng: place.lng });
+        APP.map.setZoom(15);
+        showInfoCard(place);
+      }
+    });
+
+    fragment.appendChild(card);
+  });
+
+  container.appendChild(fragment);
+}
+
+
+// ─── Map Markers ─────────────────────────────────────────────────────────
+
+function renderMarkers() {
+  // Clear existing markers
+  APP.markers.forEach(m => m.setMap(null));
+  APP.markers = [];
+  APP.markerMap = {};
+
+  if (!APP.map) return;
+
+  const bounds = new google.maps.LatLngBounds();
+
+  APP.filteredData.forEach(place => {
+    if (!place.lat || !place.lng) return;
+
+    const position = { lat: place.lat, lng: place.lng };
+    bounds.extend(position);
+
+    // Marker color based on rating
+    let markerColor;
+    if (place.rating >= 4.5) markerColor = '#d4a843';       // Gold
+    else if (place.rating >= 3.5) markerColor = '#40a860';   // Grün
+    else if (place.rating >= 2.0) markerColor = '#c4a040';   // Gelb
+    else markerColor = '#c44040';                             // Rot
+
+    const marker = new google.maps.Marker({
+      position,
+      map: APP.map,
+      title: place.name,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: markerColor,
+        fillOpacity: 0.9,
+        strokeColor: '#000',
+        strokeWeight: 1.5,
+      },
+    });
+
+    // Marker hover → show info card
+    marker.addListener('mouseover', (e) => {
+      showInfoCard(place, e);
+      highlightListCard(place.id);
+    });
+    marker.addListener('mouseout', () => {
+      hideInfoCard();
+      unhighlightListCard();
+    });
+    marker.addListener('click', () => {
+      showInfoCard(place);
+      // Scroll list to this card
+      const card = document.querySelector(`.place-card[data-place-id="${place.id}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    APP.markers.push(marker);
+    APP.markerMap[place.id] = marker;
+  });
+
+  // Fit bounds if we have markers
+  if (APP.filteredData.length > 0) {
+    APP.map.fitBounds(bounds, { padding: 50 });
+    // Don't zoom in too far
+    const listener = google.maps.event.addListener(APP.map, 'idle', () => {
+      if (APP.map.getZoom() > 15) APP.map.setZoom(15);
+      google.maps.event.removeListener(listener);
+    });
+  }
+}
+
+
+// ─── Info Card (Hover Preview) ───────────────────────────────────────────
+
+function showInfoCard(place, mouseEvent) {
+  const card = document.getElementById('map-info-card');
+  const photo = document.getElementById('info-card-photo');
+
+  // Photo
+  if (place.photos && place.photos.length > 0) {
+    photo.src = place.photos[0];
+    photo.style.display = 'block';
+  } else {
+    photo.style.display = 'none';
+  }
+
+  document.getElementById('info-card-name').textContent = place.name;
+  document.getElementById('info-card-address').textContent = place.address;
+
+  // Stars
+  const starsHtml = `${STAR_SVG} <strong>${place.rating.toFixed(1)}</strong>`;
+  document.getElementById('info-card-stars').innerHTML = starsHtml;
+  document.getElementById('info-card-reviews').textContent =
+    `${place.reviewCount.toLocaleString('de-CH')} Bewertungen`;
+
+  // GMB Link
+  const link = document.getElementById('info-card-link');
+  link.href = place.gmapsUrl || '#';
+
+  // Position card near the map center or near the marker
+  const mapEl = document.getElementById('map-container');
+  const rect = mapEl.getBoundingClientRect();
+  card.style.left = '20px';
+  card.style.bottom = '20px';
+  card.style.top = 'auto';
+  card.style.right = 'auto';
+
+  card.classList.add('visible');
+}
+
+function hideInfoCard() {
+  document.getElementById('map-info-card').classList.remove('visible');
+}
+
+
+// ─── Bidirectional Highlight ─────────────────────────────────────────────
+
+function highlightPlace(place) {
+  // Highlight marker on map
+  const marker = APP.markerMap[place.id];
+  if (marker) {
+    marker.setIcon({
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 12,
+      fillColor: '#fff',
+      fillOpacity: 1,
+      strokeColor: '#d4a843',
+      strokeWeight: 3,
+    });
+  }
+  showInfoCard(place);
+}
+
+function unhighlightPlace() {
+  // Reset all markers to normal
+  APP.filteredData.forEach(place => {
+    const marker = APP.markerMap[place.id];
+    if (!marker) return;
+    let color;
+    if (place.rating >= 4.5) color = '#d4a843';
+    else if (place.rating >= 3.5) color = '#40a860';
+    else if (place.rating >= 2.0) color = '#c4a040';
+    else color = '#c44040';
+    marker.setIcon({
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 7,
+      fillColor: color,
+      fillOpacity: 0.9,
+      strokeColor: '#000',
+      strokeWeight: 1.5,
+    });
+  });
+  hideInfoCard();
+}
+
+function highlightListCard(placeId) {
+  const card = document.querySelector(`.place-card[data-place-id="${placeId}"]`);
+  if (card) card.classList.add('highlighted');
+}
+
+function unhighlightListCard() {
+  document.querySelectorAll('.place-card.highlighted').forEach(c => c.classList.remove('highlighted'));
+}
+
+
+// ─── Rankings Panel ──────────────────────────────────────────────────────
+
+function toggleRankings() {
+  APP.rankingsVisible = !APP.rankingsVisible;
+  document.getElementById('rankings-panel').classList.toggle('visible', APP.rankingsVisible);
+}
+
+function buildRankingsPanel() {
+  const body = document.getElementById('rankings-body');
+  body.innerHTML = '';
+
+  const rankings = APP.rawData.rankings || {};
+  const placesMap = {};
+  APP.rawData.places.forEach(p => { placesMap[p.id] = p; });
+
+  Object.entries(rankings)
+    .sort((a, b) => b[1].total - a[1].total)
+    .forEach(([trade, data]) => {
+      if (data.total < 3) return;
+
+      // Top rated section
+      const section = document.createElement('div');
+      section.className = 'ranking-section';
+      section.innerHTML = `<div class="ranking-section-title">🏆 ${escHtml(trade)} – Top Bewertet</div>`;
+
+      (data.top_rated || []).slice(0, 5).forEach((id, idx) => {
+        const p = placesMap[id];
+        if (!p) return;
+        const item = document.createElement('div');
+        item.className = 'ranking-item';
+        item.innerHTML = `
+          <div class="ranking-pos ${idx === 0 ? 'gold' : ''}">${idx + 1}</div>
+          <div class="ranking-name">${escHtml(p.name)}</div>
+          <div class="ranking-rating">${p.rating.toFixed(1)} ★</div>
+        `;
+        item.onclick = () => {
+          APP.map.panTo({ lat: p.lat, lng: p.lng });
+          APP.map.setZoom(15);
+          showInfoCard(p);
+          const card = document.querySelector(`.place-card[data-place-id="${p.id}"]`);
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        section.appendChild(item);
+      });
+
+      body.appendChild(section);
+    });
+}
+
+
+// ─── Navigation ──────────────────────────────────────────────────────────
+
+function updateNavTabs(activeView) {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.view === activeView);
+  });
+}
+
+function showWelcome() {
+  APP.currentCategory = null;
+  APP.rawData = null;
+  updateNavTabs('welcome');
+  document.getElementById('filter-bar').style.display = 'none';
+  document.getElementById('sort-bar').style.display = 'none';
+  document.getElementById('rankings-toggle').style.display = 'none';
+  document.getElementById('rankings-panel').classList.remove('visible');
+  document.getElementById('nav-stats').textContent = '';
+
+  // Clear markers
+  APP.markers.forEach(m => m.setMap(null));
+  APP.markers = [];
+  hideInfoCard();
+
+  // Show welcome
+  document.getElementById('place-list').innerHTML = `
+    <div class="welcome-view" id="welcome-view">
+      <h1>Züri<em>Hub</em></h1>
+      <p>Das elitäre Verzeichnis für den Kanton Zürich. Nur Betriebe mit mindestens 100 Google-Bewertungen – transparent, filterbar, kartenbasiert.</p>
+      <div class="welcome-cards">
+        <div class="welcome-card" onclick="loadCategory('gastro')">
+          <div class="welcome-card-icon">🍽</div>
+          <div class="welcome-card-title">Gastronomie</div>
+          <div class="welcome-card-sub">Restaurants · Bars · Cafés · Bäckereien</div>
+        </div>
+        <div class="welcome-card" onclick="loadCategory('handwerker')">
+          <div class="welcome-card-icon">🔧</div>
+          <div class="welcome-card-title">Handwerker</div>
+          <div class="welcome-card-sub">Elektriker · Maler · Schreiner · Sanitär</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Reset map
+  if (APP.map) {
+    APP.map.panTo({ lat: 47.3769, lng: 8.5417 });
+    APP.map.setZoom(11);
+  }
+}
+
+
+// ─── Utilities ───────────────────────────────────────────────────────────
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+
+// ─── DEMO DATA (für Offline-Tests ohne Backend) ─────────────────────────
+// Generiert exemplarische Daten wenn keine JSON-Files vorhanden sind
+
+function generateDemoData(category) {
+  const gastroPlaces = [
+    { name: "Kronenhalle", trade: "Restaurant", lat: 47.3667, lng: 8.5441, rating: 4.5, reviewCount: 4280 },
+    { name: "Zeughauskeller", trade: "Restaurant", lat: 47.3714, lng: 8.5390, rating: 4.3, reviewCount: 8650 },
+    { name: "Hiltl", trade: "Restaurant", lat: 47.3735, lng: 8.5344, rating: 4.4, reviewCount: 7200 },
+    { name: "Conditorei Schober", trade: "Café", lat: 47.3717, lng: 8.5437, rating: 4.3, reviewCount: 2890 },
+    { name: "Sprüngli", trade: "Café", lat: 47.3697, lng: 8.5392, rating: 4.6, reviewCount: 5430 },
+    { name: "Bar am Wasser", trade: "Bar", lat: 47.3847, lng: 8.5315, rating: 4.1, reviewCount: 1230 },
+    { name: "Old Crow", trade: "Bar", lat: 47.3742, lng: 8.5322, rating: 4.2, reviewCount: 890 },
+    { name: "Bäckerei Buchmann", trade: "Bäckerei", lat: 47.3792, lng: 8.5204, rating: 4.7, reviewCount: 560 },
+    { name: "Yooji's Sushi", trade: "Takeaway", lat: 47.3776, lng: 8.5400, rating: 4.0, reviewCount: 3200 },
+    { name: "Restaurant Alpenrose", trade: "Restaurant", lat: 47.3502, lng: 8.5195, rating: 4.6, reviewCount: 1890 },
+    { name: "Chez Fritz", trade: "Restaurant", lat: 47.3853, lng: 8.5250, rating: 4.2, reviewCount: 1560 },
+    { name: "Raclette Stube", trade: "Restaurant", lat: 47.3730, lng: 8.5370, rating: 4.5, reviewCount: 4100 },
+    { name: "Tibits", trade: "Restaurant", lat: 47.3778, lng: 8.5372, rating: 4.1, reviewCount: 5800 },
+    { name: "Café Odeon", trade: "Café", lat: 47.3664, lng: 8.5458, rating: 3.8, reviewCount: 2100 },
+    { name: "Le Dézaley", trade: "Restaurant", lat: 47.3709, lng: 8.5415, rating: 4.4, reviewCount: 1750 },
+    { name: "Negishi Sushi Bar", trade: "Takeaway", lat: 47.3780, lng: 8.5390, rating: 3.6, reviewCount: 2300 },
+    { name: "Clouds Kitchen", trade: "Restaurant", lat: 47.3863, lng: 8.5161, rating: 4.2, reviewCount: 3100 },
+    { name: "Wirtschaft Neumarkt", trade: "Restaurant", lat: 47.3719, lng: 8.5448, rating: 4.0, reviewCount: 870 },
+    { name: "Babu's Bakery", trade: "Bäckerei", lat: 47.3758, lng: 8.5250, rating: 4.5, reviewCount: 1200 },
+    { name: "Jules Verne Panoramabar", trade: "Bar", lat: 47.3870, lng: 8.5180, rating: 4.3, reviewCount: 2640 },
+    { name: "Da Angela", trade: "Restaurant", lat: 47.3652, lng: 8.5500, rating: 1.8, reviewCount: 340 },
+    { name: "Kebab Palace Altstetten", trade: "Takeaway", lat: 47.3912, lng: 8.4880, rating: 1.5, reviewCount: 210 },
+    { name: "Gasthaus zum Problem", trade: "Restaurant", lat: 47.4102, lng: 8.5400, rating: 1.3, reviewCount: 150 },
+  ];
+
+  const handwerkerPlaces = [
+    { name: "EKZ Elektrotechnik AG", trade: "Elektriker", lat: 47.3650, lng: 8.5480, rating: 4.6, reviewCount: 890 },
+    { name: "Malergeschäft Suter & Söhne", trade: "Maler", lat: 47.3892, lng: 8.5120, rating: 4.8, reviewCount: 420 },
+    { name: "Schreinerei Meier AG", trade: "Schreiner", lat: 47.4100, lng: 8.5350, rating: 4.7, reviewCount: 650 },
+    { name: "Sanitas Sanitär AG", trade: "Sanitär", lat: 47.3580, lng: 8.5200, rating: 4.3, reviewCount: 380 },
+    { name: "Gipser Müller GmbH", trade: "Gipser", lat: 47.3750, lng: 8.4950, rating: 4.5, reviewCount: 290 },
+    { name: "Bodenleger Zürich AG", trade: "Bodenleger", lat: 47.4050, lng: 8.5500, rating: 4.4, reviewCount: 210 },
+    { name: "Spenglerei Keller", trade: "Dachdecker", lat: 47.3480, lng: 8.5680, rating: 4.2, reviewCount: 180 },
+    { name: "Elektro Brunner AG", trade: "Elektriker", lat: 47.4220, lng: 8.5100, rating: 4.1, reviewCount: 560 },
+    { name: "Winterthur Malerteam", trade: "Maler", lat: 47.4975, lng: 8.7290, rating: 4.6, reviewCount: 340 },
+    { name: "Gartenbau Schaffner", trade: "Gartenbau", lat: 47.3950, lng: 8.5600, rating: 4.9, reviewCount: 720 },
+    { name: "HLK Fischer AG", trade: "Heizung/Klima", lat: 47.3600, lng: 8.5050, rating: 4.0, reviewCount: 280 },
+    { name: "Schlosser Baumgartner", trade: "Schlosser", lat: 47.3830, lng: 8.4880, rating: 3.9, reviewCount: 150 },
+    { name: "Pfusch am Bau GmbH", trade: "Sanitär", lat: 47.4200, lng: 8.5400, rating: 1.6, reviewCount: 520 },
+    { name: "Elektro Murks", trade: "Elektriker", lat: 47.3700, lng: 8.5100, rating: 1.2, reviewCount: 180 },
+    { name: "Billig Maler Express", trade: "Maler", lat: 47.4400, lng: 8.6500, rating: 1.8, reviewCount: 310 },
+  ];
+
+  const places = (category === 'gastro' ? gastroPlaces : handwerkerPlaces).map((p, i) => ({
+    id: `demo_${category}_${i}`,
+    name: p.name,
+    address: `Musterstrasse ${10 + i}, ${8000 + Math.floor(Math.random() * 90)} Zürich`,
+    lat: p.lat,
+    lng: p.lng,
+    rating: p.rating,
+    reviewCount: p.reviewCount,
+    gmapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(p.name + ' Zürich')}`,
+    website: '',
+    phone: '',
+    photos: [],
+    trade: p.trade,
+    types: [],
+    hours: [],
+    businessStatus: 'OPERATIONAL',
+  }));
+
+  // Build rankings
+  const rankings = {};
+  const trades = [...new Set(places.map(p => p.trade))];
+  trades.forEach(trade => {
+    const tp = places.filter(p => p.trade === trade);
+    const byBest = [...tp].sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
+    const byWorst = [...tp].sort((a, b) => a.rating - b.rating);
+    const byReviews = [...tp].sort((a, b) => b.reviewCount - a.reviewCount);
+    rankings[trade] = {
+      total: tp.length,
+      top_rated: byBest.slice(0, 5).map(p => p.id),
+      worst_rated: byWorst.slice(0, 5).map(p => p.id),
+      most_reviewed: byReviews.slice(0, 5).map(p => p.id),
+    };
+  });
+
+  return {
+    metadata: {
+      generated: new Date().toISOString(),
+      minReviews: 100,
+      region: "Kanton Zürich",
+      category,
+      totalResults: places.length,
+    },
+    rankings,
+    places,
+  };
+}
+
+// Override fetch for demo mode when data files don't exist
+const originalFetch = window.fetch;
+window.fetch = async function(url, ...args) {
+  try {
+    const resp = await originalFetch(url, ...args);
+    if (resp.ok) return resp;
+    throw new Error('Not found');
+  } catch (e) {
+    // Check if it's a data file request
+    const match = String(url).match(/data\/(gastro|handwerker)\.json/);
+    if (match) {
+      console.log(`Demo-Modus: Generiere Beispieldaten für "${match[1]}"`);
+      const demoData = generateDemoData(match[1]);
+      return new Response(JSON.stringify(demoData), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw e;
+  }
+};
+
+
+// ─── Init ────────────────────────────────────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  initGoogleMaps();
+});
+</script>
+
+</body>
+</html>
