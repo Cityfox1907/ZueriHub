@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZüriHub – Kanton Zürich Branchenverzeichnis</title>
+<script>window.GMAPS_KEY = 'DEIN_API_KEY_HIER';</script>
+<script async defer id="gmaps-script"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060608;--bg2:#0c0c10;--bg3:#111118;--bg4:#181822;--bg5:#1e1e2a;
+  --card:#13131c;--card-h:#1a1a26;--card-b:1px solid #1f1f2e;
+  --t1:#ededf4;--t2:#9898b0;--t3:#5c5c78;--t4:#3a3a50;
+  --gold:#c9a84c;--gold2:#a88a3a;--gold3:rgba(201,168,76,.12);
+  --red:#d44;--red3:rgba(221,68,68,.1);
+  --green:#3daa5c;--green3:rgba(61,170,92,.1);
+  --blue:#4c8cd4;--blue3:rgba(76,140,212,.1);
+  --r:10px;--r2:14px;--r3:20px;
+  --sh:0 2px 16px rgba(0,0,0,.5);--sh2:0 8px 40px rgba(0,0,0,.6);
+  --ff:'Outfit',system-ui,sans-serif;--fd:'Playfair Display',Georgia,serif;
+  --tr:.18s cubic-bezier(.4,0,.2,1);
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:var(--ff);background:var(--bg);color:var(--t1);line-height:1.55;min-height:100vh;overflow-x:hidden}
+a{color:var(--gold);text-decoration:none;transition:color var(--tr)}a:hover{color:var(--t1)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--t4);border-radius:3px}
+
+/* ── Loader ─────────────────────────────────── */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+#loader.out{opacity:0;pointer-events:none}
+#loader h1{font-family:var(--fd);font-size:2.8rem;color:var(--gold);margin-bottom:.6rem}
+#loader .bar{width:160px;height:2px;background:var(--t4);border-radius:1px;overflow:hidden}
+#loader .fill{height:100%;background:var(--gold);animation:ld 1.2s ease forwards}
+@keyframes ld{to{width:100%}}
+
+/* ── Top Nav ────────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.6rem;background:rgba(6,6,8,.88);backdrop-filter:blur(24px);border-bottom:1px solid #1a1a28}
+.nav-brand{font-family:var(--fd);font-size:1.5rem;color:var(--gold);cursor:pointer;display:flex;align-items:center;gap:.4rem}
+.nav-brand i{font-style:italic;font-size:.85rem;color:var(--t3);font-family:var(--ff);font-weight:300}
+.nav-tabs{display:flex;gap:0}
+.nav-tab{padding:.5rem 1.2rem;font-size:.78rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);background:none;border:none;cursor:pointer;position:relative;transition:color var(--tr);font-family:var(--ff)}
+.nav-tab:hover{color:var(--t2)}.nav-tab.on{color:var(--gold)}
+.nav-tab.on::after{content:'';position:absolute;bottom:0;left:1rem;right:1rem;height:2px;background:var(--gold);border-radius:1px}
+.nav-ct{font-size:.72rem;color:var(--t4);letter-spacing:.04em}
+
+/* ── Main Layout ────────────────────────────── */
+.main{padding-top:56px;min-height:100vh}
+
+/* ── Welcome ────────────────────────────────── */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 56px);text-align:center;padding:3rem 1.5rem;position:relative;overflow:hidden}
+.welcome::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.06) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.welcome h1{font-family:var(--fd);font-size:4rem;color:var(--gold);font-weight:700;margin-bottom:.3rem;letter-spacing:-.01em}
+.welcome h1 em{font-style:italic;opacity:.6}
+.welcome p{color:var(--t2);font-size:1rem;max-width:500px;margin-bottom:2.5rem;font-weight:300}
+.w-cards{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center}
+.w-card{width:220px;padding:2.2rem 1.4rem;background:var(--card);border:var(--card-b);border-radius:var(--r2);cursor:pointer;transition:all var(--tr);text-align:center}
+.w-card:hover{background:var(--card-h);border-color:var(--gold2);transform:translateY(-6px);box-shadow:var(--sh2)}
+.w-card-icon{font-size:2.8rem;margin-bottom:.7rem}
+.w-card-t{font-weight:700;font-size:1.05rem;margin-bottom:.25rem}
+.w-card-s{font-size:.72rem;color:var(--t3);line-height:1.5}
+
+/* ── Hub View ───────────────────────────────── */
+.hub{display:none;padding:1.2rem 1.6rem 3rem}
+.hub.on{display:block}
+
+/* Section header */
+.hub-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem}
+.hub-title{font-family:var(--fd);font-size:2rem;color:var(--gold);font-weight:700}
+.hub-count{font-size:.78rem;color:var(--t3)}
+
+/* Filter bar */
+.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;align-items:center}
+.f-group{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.f-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--t4);margin-right:.3rem;font-weight:600}
+.f-chip{padding:.32rem .7rem;font-size:.72rem;font-weight:500;border:1px solid var(--t4);border-radius:20px;background:transparent;color:var(--t3);cursor:pointer;transition:all var(--tr);white-space:nowrap;font-family:var(--ff)}
+.f-chip:hover{border-color:var(--gold2);color:var(--t2)}
+.f-chip.on{border-color:var(--gold);background:var(--gold3);color:var(--gold)}
+.f-chip.red.on{border-color:var(--red);background:var(--red3);color:var(--red)}
+.f-sep{width:1px;height:20px;background:var(--t4);margin:0 .4rem}
+
+/* Sort + Mini-map row */
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;gap:1rem;flex-wrap:wrap}
+.sort-wrap{display:flex;align-items:center;gap:.6rem}
+.sort-sel{padding:.35rem .6rem;font-size:.72rem;background:var(--bg3);color:var(--t1);border:1px solid var(--t4);border-radius:var(--r);cursor:pointer;font-family:var(--ff)}
+.view-btns{display:flex;gap:.3rem}
+.v-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--t4);border-radius:var(--r);cursor:pointer;color:var(--t3);transition:all var(--tr);font-size:.85rem}
+.v-btn:hover,.v-btn.on{border-color:var(--gold);color:var(--gold);background:var(--gold3)}
+
+/* Mini Map */
+.mini-map-wrap{width:280px;height:180px;border-radius:var(--r2);overflow:hidden;border:1px solid var(--t4);flex-shrink:0;position:relative}
+.mini-map-wrap .expand-btn{position:absolute;top:6px;right:6px;z-index:10;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(6,6,8,.8);border:1px solid var(--t4);border-radius:6px;color:var(--t2);cursor:pointer;font-size:.75rem;transition:all var(--tr)}
+.mini-map-wrap .expand-btn:hover{background:var(--gold3);border-color:var(--gold);color:var(--gold)}
+.mini-map-wrap.expanded{position:fixed;inset:70px 1.5rem 1.5rem;width:auto;height:auto;z-index:150;border-radius:var(--r2)}
+#minimap{width:100%;height:100%}
+
+/* ── Grid ───────────────────────────────────── */
+.grid{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.grid.compact{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem}
+
+/* ── Card ───────────────────────────────────── */
+.bcard{background:var(--card);border:var(--card-b);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all var(--tr);position:relative;display:flex;flex-direction:column}
+.bcard:hover{background:var(--card-h);border-color:#2a2a3c;transform:translateY(-3px);box-shadow:var(--sh)}
+.bcard.top-mark{border-left:3px solid var(--gold)}
+.bcard.bad-mark{border-left:3px solid var(--red)}
+
+/* Card photo strip */
+.bcard-photo{width:100%;height:130px;object-fit:cover;display:block;background:var(--bg3)}
+.bcard-no-photo{width:100%;height:60px;background:linear-gradient(135deg,var(--bg3) 0%,var(--bg4) 100%);display:flex;align-items:center;justify-content:center;font-size:1.5rem;opacity:.3}
+
+/* Card body */
+.bcard-body{padding:.8rem .9rem .9rem;flex:1;display:flex;flex-direction:column}
+.bcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.3rem}
+.bcard-name{font-weight:700;font-size:.88rem;line-height:1.3;flex:1}
+.bcard-rating{display:flex;align-items:center;gap:.2rem;flex-shrink:0}
+.bcard-rating .val{font-weight:800;font-size:.9rem}
+.bcard-rating .star{color:var(--gold);font-size:.75rem}
+.bcard-addr{font-size:.7rem;color:var(--t3);margin-bottom:.5rem;line-height:1.4}
+.bcard-footer{display:flex;align-items:center;gap:.5rem;margin-top:auto;flex-wrap:wrap}
+.bcard-reviews{font-size:.68rem;color:var(--t3)}
+.bcard-badge{font-size:.62rem;padding:.15rem .45rem;border-radius:10px;font-weight:600;letter-spacing:.02em}
+.bcard-badge.trade{background:var(--blue3);color:var(--blue)}
+.bcard-badge.rank-top{background:var(--gold3);color:var(--gold)}
+.bcard-badge.rank-bad{background:var(--red3);color:var(--red)}
+
+/* GMB link overlay */
+.bcard-gmb{position:absolute;top:.5rem;right:.5rem;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(6,6,8,.75);border-radius:50%;color:var(--t2);font-size:.7rem;opacity:0;transition:opacity var(--tr);z-index:5;border:1px solid transparent}
+.bcard:hover .bcard-gmb{opacity:1}
+.bcard-gmb:hover{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+
+/* ── Compact list view ──────────────────────── */
+.grid.list-view{grid-template-columns:1fr;gap:.3rem}
+.grid.list-view .bcard{flex-direction:row;border-radius:var(--r)}
+.grid.list-view .bcard-photo,.grid.list-view .bcard-no-photo{width:70px;height:auto;min-height:60px;border-radius:0;flex-shrink:0}
+.grid.list-view .bcard-body{padding:.55rem .8rem;flex-direction:row;align-items:center;gap:1rem}
+.grid.list-view .bcard-top{margin-bottom:0;flex:1}
+.grid.list-view .bcard-addr{display:none}
+.grid.list-view .bcard-footer{margin-top:0;flex-shrink:0}
+
+/* ── Rankings sidebar ───────────────────────── */
+.rankings-drawer{position:fixed;top:56px;right:0;bottom:0;width:340px;background:rgba(8,8,12,.95);backdrop-filter:blur(20px);border-left:1px solid var(--t4);z-index:160;transform:translateX(100%);transition:transform .3s ease;overflow-y:auto;padding:0}
+.rankings-drawer.open{transform:translateX(0)}
+.rk-head{padding:1rem 1.2rem;border-bottom:1px solid var(--t4);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:rgba(8,8,12,.95);backdrop-filter:blur(20px);z-index:2}
+.rk-title{font-family:var(--fd);font-size:1.2rem;color:var(--gold)}
+.rk-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:1.2rem;padding:.3rem}
+.rk-body{padding:.8rem}
+.rk-section{margin-bottom:1rem}
+.rk-section-t{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--t4);padding:.3rem .4rem;font-weight:600}
+.rk-item{display:flex;align-items:center;gap:.5rem;padding:.4rem;border-radius:var(--r);cursor:pointer;transition:background var(--tr);font-size:.78rem}
+.rk-item:hover{background:var(--bg4)}
+.rk-pos{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;border-radius:50%;background:var(--gold3);color:var(--gold);flex-shrink:0}
+.rk-pos.g1{background:var(--gold);color:var(--bg)}
+.rk-name{flex:1;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-val{color:var(--gold);font-weight:700}
+
+/* Rankings toggle floating button */
+.rk-toggle{position:fixed;bottom:1.5rem;right:1.5rem;z-index:155;padding:.6rem 1rem;font-size:.75rem;font-weight:600;background:var(--bg3);border:1px solid var(--gold2);border-radius:24px;color:var(--gold);cursor:pointer;font-family:var(--ff);letter-spacing:.04em;transition:all var(--tr);display:none;box-shadow:var(--sh)}
+.rk-toggle:hover{background:var(--gold3);transform:translateY(-2px)}
+.rk-toggle.vis{display:flex;align-items:center;gap:.4rem}
+
+/* ── Search bar ─────────────────────────────── */
+.search-wrap{position:relative;margin-bottom:1rem}
+.search-input{width:100%;padding:.6rem 1rem .6rem 2.4rem;font-size:.85rem;background:var(--bg3);color:var(--t1);border:1px solid var(--t4);border-radius:var(--r3);font-family:var(--ff);transition:border-color var(--tr);outline:none}
+.search-input:focus{border-color:var(--gold2)}
+.search-input::placeholder{color:var(--t4)}
+.search-icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--t4);font-size:.8rem;pointer-events:none}
+
+/* ── Responsive ─────────────────────────────── */
+@media(max-width:768px){
+  .hub{padding:1rem .8rem 2rem}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem}
+  .mini-map-wrap{width:100%;height:140px}
+  .ctrl-row{flex-direction:column;align-items:stretch}
+  .rankings-drawer{width:100%}
+  .welcome h1{font-size:2.5rem}
+  .nav{padding:0 .8rem}
+}
+
+/* ── Animations ─────────────────────────────── */
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:cardIn .25s ease forwards}
+</style>
+</head>
+<body>
+
+<div id="loader"><h1>ZüriHub</h1><div class="bar"><div class="fill"></div></div></div>
+
+<nav class="nav">
+  <div class="nav-brand" onclick="goHome()">ZüriHub <i>Kt. Zürich</i></div>
+  <div class="nav-tabs">
+    <button class="nav-tab" data-v="home" onclick="goHome()">Start</button>
+    <button class="nav-tab" data-v="gastro" onclick="openHub('gastro')">Gastronomie</button>
+  </div>
+  <div class="nav-ct" id="navCt"></div>
+</nav>
+
+<div class="main" id="main">
+
+  <!-- Welcome -->
+  <section class="welcome" id="welcomeView">
+    <h1>Züri<em>Hub</em></h1>
+    <p>Das vollständige Gastronomie-Verzeichnis für den Kanton Zürich. Alle Betriebe ab 40 Google-Bewertungen – von 1 bis 5 Sterne, transparent filterbar.</p>
+    <div class="w-cards">
+      <div class="w-card" onclick="openHub('gastro')">
+        <div class="w-card-icon">🍽️</div>
+        <div class="w-card-t">Gastronomie entdecken</div>
+        <div class="w-card-s">Restaurant · Bar · Café · Takeaway · Bäckerei · Hotel</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hub: Gastro -->
+  <section class="hub" id="hub-gastro">
+    <div class="hub-head">
+      <div><div class="hub-title">Gastronomie</div><div class="hub-count" id="ct-gastro"></div></div>
+    </div>
+    <div class="search-wrap"><span class="search-icon">⌕</span><input class="search-input" id="search-gastro" placeholder="Restaurant, Bar oder Adresse suchen…" oninput="onSearch('gastro')"></div>
+    <div class="filters" id="filters-gastro"></div>
+    <div class="ctrl-row">
+      <div class="sort-wrap">
+        <select class="sort-sel" id="sort-gastro" onchange="render('gastro')">
+          <option value="rating-desc">Beste Bewertung</option>
+          <option value="rating-asc">Schlechteste Bewertung</option>
+          <option value="reviews-desc">Meiste Bewertungen</option>
+          <option value="name-asc">Name A–Z</option>
+        </select>
+        <div class="view-btns">
+          <button class="v-btn on" data-view="grid" onclick="setView('gastro','grid',this)" title="Grid">▦</button>
+          <button class="v-btn" data-view="list" onclick="setView('gastro','list',this)" title="Liste">☰</button>
+          <button class="v-btn" data-view="compact" onclick="setView('gastro','compact',this)" title="Kompakt">▪▪</button>
+        </div>
+      </div>
+      <div class="mini-map-wrap" id="mapwrap-gastro">
+        <button class="expand-btn" onclick="toggleMapExpand('gastro')" title="Karte vergrössern">⤢</button>
+        <div id="minimap-gastro" style="width:100%;height:100%"></div>
+      </div>
+    </div>
+    <div class="grid" id="grid-gastro"></div>
+  </section>
+
+</div>
+
+<!-- Rankings drawer -->
+<div class="rankings-drawer" id="rkDrawer">
+  <div class="rk-head"><div class="rk-title">🏆 Ranglisten</div><button class="rk-close" onclick="toggleRankings()">✕</button></div>
+  <div class="rk-body" id="rkBody"></div>
+</div>
+<button class="rk-toggle" id="rkToggle" onclick="toggleRankings()">🏆 Ranglisten</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ZüriHub v2 – Grid-focused, mini-map, full database
+// ═══════════════════════════════════════════════════════════════
+
+const S = {
+  maps: {},         // category → google.maps.Map
+  markers: {},      // category → [markers]
+  data: {},         // category → raw json
+  filtered: {},     // category → filtered places
+  tradeFilter: {},  // category → Set of active trades
+  ratingFilter: {}, // category → number or null
+  viewMode: {},     // category → 'grid'|'list'|'compact'
+  searchQuery: {},  // category → string
+  current: null,    // active category
+  mapsReady: false,
+  rkOpen: false,
+};
+
+// ── Star rendering ──────────────────────────────────────────
+function stars(r) {
+  const full = Math.floor(r);
+  const half = r - full >= 0.3;
+  let h = '';
+  for (let i = 0; i < full; i++) h += '★';
+  if (half) h += '½';
+  return h;
+}
+function ratingColor(r) {
+  if (r >= 4.5) return 'var(--gold)';
+  if (r >= 3.5) return 'var(--green)';
+  if (r >= 2.5) return 'var(--t2)';
+  return 'var(--red)';
+}
+
+// ── HTML escape ──────────────────────────────────────────────
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ── Navigation ───────────────────────────────────────────────
+function setNav(v) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('on', t.dataset.v === v));
+}
+function goHome() {
+  S.current = null;
+  setNav('home');
+  document.getElementById('welcomeView').style.display = '';
+  document.querySelectorAll('.hub').forEach(h => h.classList.remove('on'));
+  document.getElementById('navCt').textContent = '';
+  document.getElementById('rkToggle').classList.remove('vis');
+  closeRankings();
+}
+function openHub(cat) {
+  S.current = cat;
+  setNav(cat);
+  document.getElementById('welcomeView').style.display = 'none';
+  document.querySelectorAll('.hub').forEach(h => h.classList.remove('on'));
+  document.getElementById('hub-' + cat).classList.add('on');
+  document.getElementById('rkToggle').classList.add('vis');
+  loadData(cat);
+}
+
+// ── Data Loading ─────────────────────────────────────────────
+async function loadData(cat) {
+  if (S.data[cat]) { buildUI(cat); return; }
+  const grid = document.getElementById('grid-' + cat);
+  grid.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--t3)">Lade Daten…</div>';
+  try {
+    const r = await fetch('data/' + cat + '.json');
+    if (!r.ok) throw new Error(r.status);
+    S.data[cat] = await r.json();
+  } catch (e) {
+    console.warn('Daten nicht gefunden, Demo-Modus');
+    S.data[cat] = genDemo(cat);
+  }
+  S.tradeFilter[cat] = new Set();
+  S.ratingFilter[cat] = null;
+  S.viewMode[cat] = 'grid';
+  S.searchQuery[cat] = '';
+  buildUI(cat);
+}
+
+function buildUI(cat) {
+  buildFilters(cat);
+  applyFilters(cat);
+  initMiniMap(cat);
+  buildRankings();
+  const m = S.data[cat].metadata;
+  document.getElementById('navCt').textContent = m.totalResults + ' Betriebe · Kt. Zürich';
+}
+
+// ── Filters ──────────────────────────────────────────────────
+function buildFilters(cat) {
+  const c = document.getElementById('filters-' + cat);
+  c.innerHTML = '';
+  const places = S.data[cat].places;
+  const trades = {};
+  places.forEach(p => { trades[p.trade] = (trades[p.trade] || 0) + 1; });
+  const sorted = Object.entries(trades).sort((a, b) => b[1] - a[1]);
+
+  // Trade filter group
+  let html = '<div class="f-group"><span class="f-label">Branche</span>';
+  html += `<button class="f-chip on" id="fall-${cat}" onclick="clearTradeFilter('${cat}')">Alle (${places.length})</button>`;
+  sorted.forEach(([t, n]) => {
+    html += `<button class="f-chip" data-trade="${esc(t)}" onclick="toggleTrade('${cat}','${esc(t)}',this)">${esc(t)} (${n})</button>`;
+  });
+  html += '</div><div class="f-sep"></div>';
+
+  // Rating filter group
+  html += '<div class="f-group"><span class="f-label">Sterne</span>';
+  html += `<button class="f-chip" data-rt="4.5" onclick="toggleRating('${cat}',4.5,this)">★ 4.5+</button>`;
+  html += `<button class="f-chip" data-rt="4" onclick="toggleRating('${cat}',4,this)">★ 4+</button>`;
+  html += `<button class="f-chip" data-rt="3" onclick="toggleRating('${cat}',3,this)">★ 3+</button>`;
+  html += `<button class="f-chip" data-rt="2" onclick="toggleRating('${cat}',2,this)">★ 2+</button>`;
+  html += `<button class="f-chip red" data-rt="0" onclick="toggleRating('${cat}',0,this)">★ < 2</button>`;
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function clearTradeFilter(cat) {
+  S.tradeFilter[cat].clear();
+  document.querySelectorAll('#filters-' + cat + ' .f-chip[data-trade]').forEach(c => c.classList.remove('on'));
+  document.getElementById('fall-' + cat).classList.add('on');
+  applyFilters(cat);
+}
+function toggleTrade(cat, trade, el) {
+  const set = S.tradeFilter[cat];
+  if (set.has(trade)) { set.delete(trade); el.classList.remove('on'); }
+  else { set.add(trade); el.classList.add('on'); document.getElementById('fall-' + cat).classList.remove('on'); }
+  if (set.size === 0) document.getElementById('fall-' + cat).classList.add('on');
+  applyFilters(cat);
+}
+function toggleRating(cat, level, el) {
+  const wasOn = el.classList.contains('on');
+  document.querySelectorAll('#filters-' + cat + ' .f-chip[data-rt]').forEach(c => c.classList.remove('on'));
+  if (wasOn) { S.ratingFilter[cat] = null; }
+  else { S.ratingFilter[cat] = level; el.classList.add('on'); }
+  applyFilters(cat);
+}
+
+// ── Search ──────────────────────────────────────────────────
+function onSearch(cat) {
+  S.searchQuery[cat] = document.getElementById('search-' + cat).value.toLowerCase().trim();
+  applyFilters(cat);
+}
+
+// ── Filter + Sort Engine ─────────────────────────────────────
+function applyFilters(cat) {
+  let p = [...S.data[cat].places];
+  const tf = S.tradeFilter[cat];
+  const rf = S.ratingFilter[cat];
+  const q = S.searchQuery[cat];
+
+  if (tf.size > 0) p = p.filter(x => tf.has(x.trade));
+  if (rf !== null) {
+    if (rf === 0) p = p.filter(x => x.rating < 2);
+    else p = p.filter(x => x.rating >= rf);
+  }
+  if (q) p = p.filter(x => x.name.toLowerCase().includes(q) || x.address.toLowerCase().includes(q) || x.trade.toLowerCase().includes(q));
+
+  S.filtered[cat] = p;
+  render(cat);
+}
+
+function render(cat) {
+  let p = S.filtered[cat] || [];
+  const sortVal = document.getElementById('sort-' + cat).value;
+  const cmp = {
+    'rating-desc': (a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount,
+    'rating-asc': (a, b) => a.rating - b.rating || b.reviewCount - a.reviewCount,
+    'reviews-desc': (a, b) => b.reviewCount - a.reviewCount,
+    'name-asc': (a, b) => a.name.localeCompare(b.name, 'de'),
+  };
+  p.sort(cmp[sortVal] || cmp['rating-desc']);
+
+  document.getElementById('ct-' + cat).textContent = p.length + ' von ' + S.data[cat].places.length + ' Betrieben';
+
+  // Rankings lookup
+  const rk = S.data[cat].rankings || {};
+  const topIds = new Set(), badIds = new Set();
+  Object.values(rk).forEach(r => {
+    (r.top_rated || []).forEach(id => topIds.add(id));
+    (r.worst_rated || []).forEach(id => badIds.add(id));
+  });
+
+  const grid = document.getElementById('grid-' + cat);
+  const vm = S.viewMode[cat] || 'grid';
+  grid.className = 'grid' + (vm === 'list' ? ' list-view' : '') + (vm === 'compact' ? ' compact' : '');
+
+  // Performance: batch render max 200, lazy rest
+  const MAX_INITIAL = 200;
+  const toRender = p.slice(0, MAX_INITIAL);
+  let html = '';
+
+  toRender.forEach((place, i) => {
+    const isTop = topIds.has(place.id);
+    const isBad = badIds.has(place.id);
+    const cls = ['bcard', 'anim'];
+    if (isTop) cls.push('top-mark');
+    if (isBad) cls.push('bad-mark');
+
+    const photo = place.photos && place.photos[0]
+      ? `<img class="bcard-photo" src="${esc(place.photos[0])}" alt="" loading="lazy" onerror="this.outerHTML='<div class=bcard-no-photo>📍</div>'">`
+      : '<div class="bcard-no-photo">📍</div>';
+
+    const gmb = place.gmapsUrl || '#';
+
+    html += `<div class="${cls.join(' ')}" style="animation-delay:${Math.min(i * .015, .4)}s" data-id="${place.id}" onclick="window.open('${esc(gmb)}','_blank')">
+      <a class="bcard-gmb" href="${esc(gmb)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Google Maps öffnen">↗</a>
+      ${photo}
+      <div class="bcard-body">
+        <div class="bcard-top">
+          <div class="bcard-name">${esc(place.name)}</div>
+          <div class="bcard-rating"><span class="star" style="color:${ratingColor(place.rating)}">${stars(place.rating)}</span> <span class="val" style="color:${ratingColor(place.rating)}">${place.rating.toFixed(1)}</span></div>
+        </div>
+        <div class="bcard-addr">${esc(place.address)}</div>
+        <div class="bcard-footer">
+          <span class="bcard-reviews">${place.reviewCount.toLocaleString('de-CH')} Bewertungen</span>
+          <span class="bcard-badge trade">${esc(place.trade)}</span>
+          ${isTop ? '<span class="bcard-badge rank-top">TOP</span>' : ''}
+          ${isBad ? '<span class="bcard-badge rank-bad">WARNUNG</span>' : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  if (p.length > MAX_INITIAL) {
+    html += `<div style="grid-column:1/-1;text-align:center;padding:1.5rem">
+      <button class="f-chip" onclick="renderAll('${cat}')" style="font-size:.85rem;padding:.5rem 1.2rem">Alle ${p.length} Ergebnisse laden</button>
+    </div>`;
+  }
+  if (p.length === 0) {
+    html = '<div style="grid-column:1/-1;padding:3rem;text-align:center;color:var(--t3)">Keine Betriebe mit diesen Filtern.</div>';
+  }
+
+  grid.innerHTML = html;
+  renderMiniMapMarkers(cat);
+}
+
+function renderAll(cat) {
+  // Re-render without limit
+  const grid = document.getElementById('grid-' + cat);
+  const p = S.filtered[cat] || [];
+  const rk = S.data[cat].rankings || {};
+  const topIds = new Set(), badIds = new Set();
+  Object.values(rk).forEach(r => {
+    (r.top_rated || []).forEach(id => topIds.add(id));
+    (r.worst_rated || []).forEach(id => badIds.add(id));
+  });
+  let html = '';
+  p.forEach((place, i) => {
+    const isTop = topIds.has(place.id);
+    const isBad = badIds.has(place.id);
+    const cls = ['bcard'];
+    if (isTop) cls.push('top-mark');
+    if (isBad) cls.push('bad-mark');
+    const photo = place.photos && place.photos[0]
+      ? `<img class="bcard-photo" src="${esc(place.photos[0])}" alt="" loading="lazy" onerror="this.outerHTML='<div class=bcard-no-photo>📍</div>'">`
+      : '<div class="bcard-no-photo">📍</div>';
+    const gmb = place.gmapsUrl || '#';
+    html += `<div class="${cls.join(' ')}" data-id="${place.id}" onclick="window.open('${esc(gmb)}','_blank')">
+      <a class="bcard-gmb" href="${esc(gmb)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Google Maps öffnen">↗</a>
+      ${photo}
+      <div class="bcard-body">
+        <div class="bcard-top">
+          <div class="bcard-name">${esc(place.name)}</div>
+          <div class="bcard-rating"><span class="star" style="color:${ratingColor(place.rating)}">${stars(place.rating)}</span> <span class="val" style="color:${ratingColor(place.rating)}">${place.rating.toFixed(1)}</span></div>
+        </div>
+        <div class="bcard-addr">${esc(place.address)}</div>
+        <div class="bcard-footer">
+          <span class="bcard-reviews">${place.reviewCount.toLocaleString('de-CH')} Bewertungen</span>
+          <span class="bcard-badge trade">${esc(place.trade)}</span>
+          ${isTop ? '<span class="bcard-badge rank-top">TOP</span>' : ''}
+          ${isBad ? '<span class="bcard-badge rank-bad">WARNUNG</span>' : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+// ── View toggle ──────────────────────────────────────────────
+function setView(cat, mode, btn) {
+  S.viewMode[cat] = mode;
+  btn.closest('.view-btns').querySelectorAll('.v-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  render(cat);
+}
+
+// ── Mini Map ─────────────────────────────────────────────────
+function initMiniMap(cat) {
+  if (!S.mapsReady) return;
+  if (S.maps[cat]) { renderMiniMapMarkers(cat); return; }
+  S.maps[cat] = new google.maps.Map(document.getElementById('minimap-' + cat), {
+    center: { lat: 47.3769, lng: 8.5417 },
+    zoom: 10,
+    styles: mapStyle(),
+    disableDefaultUI: true,
+    zoomControl: true,
+    gestureHandling: 'cooperative',
+  });
+  S.markers[cat] = [];
+  renderMiniMapMarkers(cat);
+}
+
+function renderMiniMapMarkers(cat) {
+  if (!S.maps[cat]) return;
+  (S.markers[cat] || []).forEach(m => m.setMap(null));
+  S.markers[cat] = [];
+  const bounds = new google.maps.LatLngBounds();
+  const p = S.filtered[cat] || [];
+  // Limit markers for perf
+  const max = Math.min(p.length, 500);
+  for (let i = 0; i < max; i++) {
+    const place = p[i];
+    if (!place.lat || !place.lng) continue;
+    const pos = { lat: place.lat, lng: place.lng };
+    bounds.extend(pos);
+    let c;
+    if (place.rating >= 4.5) c = '#c9a84c';
+    else if (place.rating >= 3.5) c = '#3daa5c';
+    else if (place.rating >= 2) c = '#aaa';
+    else c = '#d44';
+    const m = new google.maps.Marker({
+      position: pos, map: S.maps[cat], title: place.name,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: c, fillOpacity: .85, strokeColor: '#000', strokeWeight: 1 },
+    });
+    m.addListener('click', () => window.open(place.gmapsUrl || '#', '_blank'));
+    S.markers[cat].push(m);
+  }
+  if (max > 0) S.maps[cat].fitBounds(bounds, 20);
+}
+
+function toggleMapExpand(cat) {
+  document.getElementById('mapwrap-' + cat).classList.toggle('expanded');
+  setTimeout(() => { if (S.maps[cat]) google.maps.event.trigger(S.maps[cat], 'resize'); }, 100);
+}
+
+function mapStyle() {
+  return [
+    { elementType: "geometry", stylers: [{ color: "#14141e" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#14141e" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#444466" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e1e30" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a0a14" }] },
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
+    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#252538" }] },
+  ];
+}
+
+// ── Rankings ─────────────────────────────────────────────────
+function toggleRankings() {
+  S.rkOpen = !S.rkOpen;
+  document.getElementById('rkDrawer').classList.toggle('open', S.rkOpen);
+}
+function closeRankings() {
+  S.rkOpen = false;
+  document.getElementById('rkDrawer').classList.remove('open');
+}
+function buildRankings() {
+  if (!S.current || !S.data[S.current]) return;
+  const body = document.getElementById('rkBody');
+  const rk = S.data[S.current].rankings || {};
+  const pm = {};
+  S.data[S.current].places.forEach(p => { pm[p.id] = p; });
+  let html = '';
+  Object.entries(rk).sort((a, b) => b[1].total - a[1].total).forEach(([trade, d]) => {
+    if (d.total < 2) return;
+    html += `<div class="rk-section"><div class="rk-section-t">🏆 ${esc(trade)}</div>`;
+    (d.top_rated || []).slice(0, 5).forEach((id, i) => {
+      const p = pm[id]; if (!p) return;
+      html += `<div class="rk-item" onclick="window.open('${esc(p.gmapsUrl||'#')}','_blank')">
+        <div class="rk-pos ${i === 0 ? 'g1' : ''}">${i + 1}</div>
+        <div class="rk-name">${esc(p.name)}</div>
+        <div class="rk-val">${p.rating.toFixed(1)} ★</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html || '<div style="padding:2rem;color:var(--t3);text-align:center">Keine Rankings verfügbar</div>';
+}
+
+// ── Google Maps Init ─────────────────────────────────────────
+function initGMaps() {
+  const s = document.getElementById('gmaps-script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${window.GMAPS_KEY}&callback=onMapsReady`;
+}
+window.onMapsReady = function() {
+  S.mapsReady = true;
+  if (S.current) initMiniMap(S.current);
+  setTimeout(() => document.getElementById('loader').classList.add('out'), 800);
+};
+
+// ── DEMO DATA ────────────────────────────────────────────────
+function genDemo(cat) {
+  const zh = [
+    {d:"Zürich",la:47.3769,lo:8.5417},{d:"Winterthur",la:47.4975,lo:8.7290},
+    {d:"Uster",la:47.3472,lo:8.7217},{d:"Dübendorf",la:47.3973,lo:8.6184},
+    {d:"Dietikon",la:47.4045,lo:8.4001},{d:"Wetzikon",la:47.3267,lo:8.7978},
+    {d:"Bülach",la:47.5200,lo:8.5400},{d:"Horgen",la:47.2590,lo:8.5980},
+    {d:"Kloten",la:47.4514,lo:8.5849},{d:"Illnau-Effretikon",la:47.4132,lo:8.7144},
+    {d:"Opfikon",la:47.4320,lo:8.5680},{d:"Wädenswil",la:47.2300,lo:8.6690},
+    {d:"Volketswil",la:47.3920,lo:8.6870},{d:"Thalwil",la:47.2930,lo:8.5630},
+    {d:"Affoltern am Albis",la:47.2780,lo:8.4530},{d:"Adliswil",la:47.3100,lo:8.5240},
+    {d:"Rüti",la:47.2570,lo:8.8540},{d:"Schlieren",la:47.3970,lo:8.4480},
+    {d:"Regensdorf",la:47.4330,lo:8.4690},{d:"Wallisellen",la:47.4140,lo:8.5950}
+  ];
+  const names = {
+    Restaurant: ["Kronenhalle","Zeughauskeller","Hiltl","Clouds Kitchen","Le Dézaley","Alpenrose","Wirtschaft Neumarkt","Raclette Stube","Chez Fritz","Helvetia","Brasserie Lipp","Ristorante Bindella","Sala of Tokyo","Holy Cow","Lily's","Thai Garden","Pizzeria Molino","Rheinfelder Bierhalle","Zum Kropf","Volkshaus","Bürgli","Restaurant Bauschänzli","Casa Ferlin","Sonnenberg","Rigiblick","Didi's Frieden","Zunfthaus zur Waag","Heugümper","Johanniter","Rosaly's","Mère Catherine","Sein","Razzia","Linde Oberstrass","Ristorante Orsini","Nooba","Coco","Miss Miu","Steakhouse Grill","Maison Manesse","Pavillon","Eden Garden","Münsterhof","Haus zum Rüden","Restaurant Terrasse","Outback Lodge","Markthalle","Wirtschaft Wiesengrund","Seerose","Löweneck","Altes Klösterli","Blaue Ente","Caduff's Wine Loft","Lindenhof","Quaglinos","Reithalle","Schipfe 16","Tao's","The Restaurant","Uto Kulm","Zur Zimmerleuten","Aura","Commihalle","Drei Stuben","El Lokal","Frau Gerolds Garten","Giesserei","Haute","Josef","Karl der Grosse","LaSalle","Neuhaus","Pumpstation","Restaurant Metropol","Sablier","Tüfi","Umami","Vivat","Waid","Ziegel Oh Lac","Accademia","Dal Moro's","Fork & Bottle","Gambrinus","Igniv","Kontiki","La Rôtisserie","Milano","Neni","Opera","Pastarazzi","Quartino","Rosi","Spaghetti Factory","Totò","Udo's","Bianchi","Cafetin","Elefant","Hafenkneipe","Old Town","Jasmine"],
+    Bar: ["Bar am Wasser","Old Crow","Widder Bar","Dante","Odeon","Tales Bar","Pony Bar","Raygrodski","Shamrock","Clouds Bar","Jade Bar","Floor 64","Rimini Bar","Sphères","Fritz","Toni Molkerei Bar","Gerold Bar","Kasheme","Labor Bar","Hive","Bauschänzli Bar","Nietturm","Purpur","Riffraff","Stüssihof","TapTab","Udo Bar","Werk 8","Xtra Bar","Zähringer","Bazillus","Cinchona","Dachkantine","El Internado","Frieda's Büxe","Gonzo","Helsinki","Icon","Jules Verne","Olé Olé"],
+    "Café": ["Sprüngli","Conditorei Schober","Café Odeon","Café des Amis","Café Miyuko","Kafi Dihei","Milchbar","Vicafé","Mame","Café Henrici","Coffee Circle","Stoll Kaffee","Café Plüsch","Kafischnaps","Kafi Franz","Boréal Coffee","Miró Café","Nini Café","Auer & Co","Birdie","Certo","DiVino","Ella","George Bar & Grill","Il Caffè","Josefine","Lotti","Maxwell","Nordbrücke","Prado","Razzia Café","Tobi","Urban","Viadukt Café","Wunderbar","Xocolat","Zentraleck","Frühling","Helvti","Kiosk","Quai","Schüür"],
+    Takeaway: ["Yooji's","Negishi","Hiltl Take Away","Tibits to Go","Kebab Station","Sternen Grill","Poke House","Sushi Mania","Dean & David","Äss-Bar","Vegi Voodoo King","Al Forno","Burrito Rico","City Wok","Döner Box","El Sabor","Falafel King","Green Point","House of Sushi","Istanbul Grill","Jade Wok","Karma Food","Lunchbox","Mango Thai","New York Pizza","Orient Express","Pizza Taxi","Quick Bites","Ramen Shop","Street Food Box","Taco Loco","Udon House","Vegan Kitchen","Wok Star","Yummy Box","Zurich Bites"],
+    "Bäckerei": ["Buchmann","Stocker","Fleischli","Jowa","Steiner Beck","John Baker","Maison Blunt","Sutter Begg","Kleiner Beck","Hausbäckerei","Brotmacher","Richi's","Bäckerei Gnädinger","Bäckerei Kloter","Alpenbrot","Backwerk","Deli Bake","Enzian Bäckerei","Frisch Gebacken","Goldkorn","Haus Brot","Kornhaus","Landbäckerei","Mühlenbrot","Naturbäck","Ofenfrisch","Pane Vivo","Rösli Bäckerei","Spycher","Vollkorn Weber"],
+    Hotel: ["Baur au Lac","The Dolder Grand","Widder Hotel","Storchen","Schweizerhof","Marriott","Hilton Airport","Hyatt Regency","25hours Hotel","Hotel Helvetia","Greulich","Hotel Florhof","Sorell Seidenhof","Kindli","Renaissance Tower","B2 Boutique","Park Hyatt","Atlantis","Sheraton","Radisson Blu","Ascot","Central Plaza","Eden au Lac","Glockenhof","Helmhaus","Limmathof","Marta","Opera House","Plattenhof","Rex","Seefeld","Townhouse"],
+  };
+  const places = [];
+  let idx = 0;
+  Object.entries(names).forEach(([trade, list]) => {
+    list.forEach(name => {
+      const loc = zh[Math.floor(Math.random() * zh.length)];
+      const rating = Math.round((1.0 + Math.random() * 4.0) * 10) / 10;
+      const reviews = 40 + Math.floor(Math.random() * 3000);
+      places.push({
+        id: `demo_${idx}`, name,
+        address: `${['Bahnhof','Limmat','See','Berg','Wald','Kirch','Dorf','Markt','Schul','Haupt','Rösli','Löwen','Mühle','Garten','Ring','Wein','Brunnen','Rathaus','Kreuz','Feld'][Math.floor(Math.random()*20)]}strasse ${1+Math.floor(Math.random()*120)}, ${8000+Math.floor(Math.random()*99)} ${loc.d}`,
+        lat: loc.la + (Math.random() - .5) * .04, lng: loc.lo + (Math.random() - .5) * .06,
+        rating, reviewCount: reviews,
+        gmapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(name + ' ' + loc.d + ' Zürich')}`,
+        website: '', phone: '', photos: [], trade, types: [], hours: [], businessStatus: 'OPERATIONAL',
+      });
+      idx++;
+    });
+  });
+  const rankings = {};
+  [...new Set(places.map(p => p.trade))].forEach(trade => {
+    const tp = places.filter(p => p.trade === trade);
+    const best = [...tp].sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
+    const worst = [...tp].sort((a, b) => a.rating - b.rating);
+    const most = [...tp].sort((a, b) => b.reviewCount - a.reviewCount);
+    rankings[trade] = { total: tp.length, top_rated: best.slice(0, 10).map(p => p.id), worst_rated: worst.slice(0, 10).map(p => p.id), most_reviewed: most.slice(0, 10).map(p => p.id) };
+  });
+  return { metadata: { generated: new Date().toISOString(), minReviews: 40, region: 'Kanton Zürich', category: 'gastro', totalResults: places.length }, rankings, places };
+}
+
+// Override fetch for demo
+const _f = window.fetch;
+window.fetch = async function(u, ...a) {
+  try { const r = await _f(u, ...a); if (r.ok) return r; throw 0; }
+  catch (e) {
+    const m = String(u).match(/data\/(gastro|handwerker)\.json/);
+    if (m) return new Response(JSON.stringify(genDemo(m[1])), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    throw e;
+  }
+};
+
+// ── Boot ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', initGMaps);
+</script>
+</body>
+</html>
