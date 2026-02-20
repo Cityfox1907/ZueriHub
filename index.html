@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zürich Gastro Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#FAFAF8;--surface:#FFFFFF;--surface2:#F3F2EF;--border:#E8E6E1;
+--text:#1A1A18;--text2:#6B6960;--text3:#9E9A90;
+--accent:#E8673C;--accent-light:#FFF0EB;--accent-dark:#C4502A;
+--blue:#2563EB;--blue-light:#EFF6FF;
+--green:#16A34A;--green-light:#F0FDF4;
+--yellow:#EAB308;--yellow-light:#FEFCE8;
+--red:#DC2626;--red-light:#FEF2F2;
+--radius:12px;--radius-sm:8px;--radius-lg:16px;
+--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+--shadow-md:0 4px 12px rgba(0,0,0,.08);
+--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+--font:'DM Sans',sans-serif;--font-display:'Playfair Display',serif;
+}
+html{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{min-height:100vh}
+input,select,button,textarea{font-family:inherit;font-size:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:inherit;text-decoration:none}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes slideInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes dropBounce{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+.fade-in{animation:fadeIn .4s ease both}
+.stagger>*{animation:fadeIn .4s ease both}
+.stagger>*:nth-child(1){animation-delay:0s}.stagger>*:nth-child(2){animation-delay:.05s}
+.stagger>*:nth-child(3){animation-delay:.1s}.stagger>*:nth-child(4){animation-delay:.15s}
+.stagger>*:nth-child(5){animation-delay:.2s}.stagger>*:nth-child(6){animation-delay:.25s}
+
+/* ===== LANDING SCREEN ===== */
+#landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;position:relative;overflow:hidden}
+#landing::before{content:'';position:absolute;top:-30%;right:-20%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(232,103,60,.08),transparent 70%);pointer-events:none}
+#landing::after{content:'';position:absolute;bottom:-20%;left:-15%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.06),transparent 70%);pointer-events:none}
+.landing-logo{font-family:var(--font-display);font-size:clamp(2.4rem,5vw,3.6rem);font-weight:800;color:var(--text);line-height:1.15;margin-bottom:.5rem}
+.landing-logo span{color:var(--accent)}
+.landing-sub{font-size:1.1rem;color:var(--text2);max-width:500px;margin:0 auto 2.5rem;line-height:1.6}
+
+/* Drop Zone */
+.drop-zone{position:relative;width:100%;max-width:520px;border:2px dashed var(--border);border-radius:var(--radius-lg);padding:3rem 2rem;background:var(--surface);transition:all .25s ease;cursor:pointer;z-index:1}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:var(--accent-light);transform:scale(1.01)}
+.drop-zone.dragover{animation:dropBounce .3s ease}
+.drop-zone-icon{font-size:3rem;margin-bottom:1rem;display:block}
+.drop-zone-text{font-size:1rem;color:var(--text2);line-height:1.6}
+.drop-zone-text strong{color:var(--accent);font-weight:600}
+.drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.features{display:flex;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;max-width:700px;z-index:1}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;flex:1;min-width:180px;max-width:220px;text-align:left}
+.feature-card .icon{font-size:1.5rem;margin-bottom:.5rem;display:block}
+.feature-card h3{font-size:.9rem;font-weight:600;margin-bottom:.25rem}
+.feature-card p{font-size:.8rem;color:var(--text2);line-height:1.5}
+
+.demo-btn{margin-top:2rem;padding:.75rem 2rem;border-radius:var(--radius);border:1px solid var(--border);font-weight:500;color:var(--text2);transition:all .2s;z-index:1}
+.demo-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+/* Loading */
+#loading{display:none;position:fixed;inset:0;background:rgba(250,250,248,.92);backdrop-filter:blur(8px);z-index:9999;flex-direction:column;align-items:center;justify-content:center}
+#loading.active{display:flex}
+.loader-bar{width:240px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:1.5rem}
+.loader-bar-inner{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .3s}
+.loader-text{font-size:.95rem;color:var(--text2);margin-top:1rem}
+
+/* ===== MAIN APP ===== */
+#app{display:none}
+#app.active{display:block}
+
+/* Header */
+.app-header{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.75rem 1.5rem}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.header-logo{font-family:var(--font-display);font-size:1.3rem;font-weight:700;white-space:nowrap}
+.header-logo span{color:var(--accent)}
+.header-search{flex:1;min-width:200px;max-width:480px;position:relative}
+.header-search input{width:100%;padding:.6rem 1rem .6rem 2.5rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-size:.9rem;transition:border-color .2s,box-shadow .2s;outline:none}
+.header-search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,103,60,.1)}
+.header-search svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.header-actions{display:flex;gap:.5rem;align-items:center;margin-left:auto}
+.header-btn{padding:.5rem .85rem;border-radius:var(--radius-sm);font-size:.82rem;font-weight:500;color:var(--text2);border:1px solid var(--border);background:var(--surface);transition:all .2s;display:flex;align-items:center;gap:.35rem}
+.header-btn:hover{border-color:var(--accent);color:var(--accent)}
+.header-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.header-btn svg{width:16px;height:16px}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.view-toggle button{padding:.45rem .65rem;background:var(--surface);border:none;color:var(--text3);transition:all .2s}
+.view-toggle button.active{background:var(--accent);color:#fff}
+.view-toggle button:not(:last-child){border-right:1px solid var(--border)}
+
+/* Stats Bar */
+.stats-bar{max-width:1440px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;font-size:.85rem;color:var(--text2)}
+.result-count{font-weight:600;color:var(--text)}
+.result-count span{color:var(--accent)}
+
+/* Active Filters */
+.active-filters{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.filter-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .65rem;background:var(--accent-light);color:var(--accent-dark);border-radius:20px;font-size:.78rem;font-weight:500;white-space:nowrap}
+.filter-chip button{display:flex;align-items:center;color:var(--accent-dark);padding:0;margin-left:.1rem;opacity:.7;transition:opacity .15s}
+.filter-chip button:hover{opacity:1}
+.clear-all-btn{font-size:.78rem;color:var(--accent);font-weight:500;padding:.25rem .5rem;border-radius:var(--radius-sm);transition:background .15s}
+.clear-all-btn:hover{background:var(--accent-light)}
+
+/* Filter Sidebar */
+.main-layout{max-width:1440px;margin:0 auto;display:flex;gap:0;position:relative}
+.filter-sidebar{width:280px;min-width:280px;border-right:1px solid var(--border);background:var(--surface);padding:1rem 1.25rem;overflow-y:auto;max-height:calc(100vh - 120px);position:sticky;top:120px;transition:transform .3s ease}
+.filter-section{margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.filter-section:last-child{border-bottom:none}
+.filter-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);margin-bottom:.6rem;display:flex;align-items:center;justify-content:space-between}
+.filter-label button{font-size:.7rem;color:var(--accent);font-weight:500}
+
+/* Trade & Type Toggles */
+.toggle-group{display:flex;flex-wrap:wrap;gap:.35rem}
+.toggle-btn{padding:.3rem .65rem;border-radius:20px;font-size:.78rem;border:1px solid var(--border);color:var(--text2);background:var(--surface);transition:all .2s;white-space:nowrap}
+.toggle-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.toggle-btn .cnt{font-size:.7rem;opacity:.7;margin-left:.2rem}
+
+/* City Filter */
+.city-search{width:100%;padding:.45rem .7rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;margin-bottom:.5rem;outline:none;transition:border-color .2s}
+.city-search:focus{border-color:var(--accent)}
+.city-list{max-height:200px;overflow-y:auto}
+.city-item{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;font-size:.82rem;cursor:pointer;color:var(--text2);transition:color .15s}
+.city-item:hover{color:var(--text)}
+.city-item input[type="checkbox"]{accent-color:var(--accent);width:14px;height:14px}
+.city-item .cnt{margin-left:auto;font-size:.72rem;color:var(--text3)}
+.city-quick{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem}
+
+/* Sliders */
+.range-wrap{display:flex;flex-direction:column;gap:.3rem}
+.range-wrap label{font-size:.8rem;color:var(--text2);display:flex;justify-content:space-between}
+.range-wrap label span{font-weight:600;color:var(--text)}
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border);outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff;box-shadow:var(--shadow)}
+.review-presets{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem}
+
+/* Trust Filter */
+.trust-toggles{display:flex;gap:.35rem;flex-wrap:wrap}
+.trust-btn{padding:.3rem .6rem;border-radius:20px;font-size:.78rem;border:1px solid var(--border);transition:all .2s}
+.trust-btn.active{font-weight:500}
+.trust-btn[data-trust="trusted"].active{background:var(--green-light);border-color:var(--green);color:var(--green)}
+.trust-btn[data-trust="review"].active{background:var(--yellow-light);border-color:var(--yellow);color:#92400E}
+.trust-btn[data-trust="suspicious"].active{background:var(--red-light);border-color:var(--red);color:var(--red)}
+
+/* Content Area */
+.content-area{flex:1;padding:1rem 1.5rem;min-width:0}
+
+/* Grid */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+@media(max-width:1100px){.cards-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.cards-grid{grid-template-columns:1fr}}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.15rem;cursor:pointer;transition:all .25s ease;position:relative;display:flex;flex-direction:column;gap:.5rem}
+.card:hover{box-shadow:var(--shadow-md);border-color:rgba(232,103,60,.25);transform:translateY(-2px)}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.card-name{font-weight:600;font-size:.95rem;line-height:1.35;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-trust{font-size:.85rem;flex-shrink:0}
+.card-rating{display:flex;align-items:center;gap:.4rem}
+.stars{display:flex;gap:1px;color:var(--yellow)}
+.stars svg{width:14px;height:14px}
+.stars .empty{color:var(--border)}
+.rating-num{font-weight:600;font-size:.88rem}
+.review-count{font-size:.78rem;color:var(--text3)}
+.card-address{font-size:.8rem;color:var(--text2);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.card-badges{display:flex;flex-wrap:wrap;gap:.3rem}
+.badge{padding:.15rem .5rem;border-radius:20px;font-size:.72rem;font-weight:500;white-space:nowrap}
+.badge-trade{background:var(--accent-light);color:var(--accent-dark)}
+.badge-type{background:var(--blue-light);color:var(--blue)}
+.badge-status-open{background:var(--green-light);color:var(--green)}
+.badge-status-closed{background:var(--red-light);color:var(--red)}
+
+/* List View */
+.list-view{display:none}
+.list-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.84rem}
+.list-table th{position:sticky;top:118px;background:var(--surface2);padding:.6rem .75rem;text-align:left;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text3);border-bottom:2px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;z-index:10}
+.list-table th:hover{color:var(--accent)}
+.list-table th .sort-arrow{margin-left:.25rem;opacity:.4;font-size:.7rem}
+.list-table th.sorted .sort-arrow{opacity:1;color:var(--accent)}
+.list-table td{padding:.55rem .75rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.list-table tr{transition:background .15s}
+.list-table tbody tr:hover{background:var(--accent-light)}
+.list-table tbody tr:nth-child(even){background:rgba(0,0,0,.015)}
+.list-table tbody tr:nth-child(even):hover{background:var(--accent-light)}
+.list-table .name-cell{font-weight:500;cursor:pointer;color:var(--accent-dark);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-table .name-cell:hover{text-decoration:underline}
+.list-table .addr-cell{color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:.5rem;margin:2rem 0 1rem;flex-wrap:wrap}
+.page-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);font-size:.85rem;font-weight:500;border:1px solid var(--border);color:var(--text2);background:var(--surface);transition:all .2s}
+.page-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page-btn:disabled{opacity:.3;pointer-events:none}
+.page-info{font-size:.82rem;color:var(--text3);padding:0 .5rem}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:200;display:none;justify-content:flex-end}
+.modal-overlay.active{display:flex}
+.modal-panel{width:520px;max-width:100%;height:100vh;background:var(--surface);overflow-y:auto;animation:slideInRight .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.1)}
+.modal-close{position:sticky;top:0;z-index:10;display:flex;justify-content:flex-end;padding:.75rem 1rem;background:rgba(255,255,255,.9);backdrop-filter:blur(8px)}
+.modal-close button{width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;transition:background .2s}
+.modal-close button:hover{background:var(--border)}
+.modal-body{padding:0 1.5rem 2rem}
+.modal-gallery{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1.25rem;scroll-snap-type:x mandatory}
+.modal-gallery img{width:260px;height:180px;object-fit:cover;border-radius:var(--radius);flex-shrink:0;scroll-snap-align:start;background:var(--surface2)}
+.modal-name{font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:.5rem;line-height:1.3}
+.modal-section{margin-bottom:1.25rem}
+.modal-section h4{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);margin-bottom:.5rem}
+.modal-info-row{display:flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--text2);margin-bottom:.4rem}
+.modal-info-row svg{width:16px;height:16px;color:var(--text3);flex-shrink:0}
+.modal-types{display:flex;flex-wrap:wrap;gap:.3rem}
+.modal-cta{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
+.modal-cta a,.modal-cta button{display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.25rem;border-radius:var(--radius);font-size:.88rem;font-weight:500;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-secondary{background:var(--surface);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Trust Explanation */
+.trust-explain{background:var(--surface2);border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:.82rem;color:var(--text2);line-height:1.6}
+.trust-explain .factor{display:flex;align-items:center;gap:.4rem;margin-top:.3rem}
+.trust-explain .factor.positive{color:var(--green)}
+.trust-explain .factor.negative{color:var(--red)}
+.trust-explain .factor.neutral{color:var(--text3)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text3)}
+.empty-state .icon{font-size:3rem;margin-bottom:1rem;display:block}
+
+/* Mobile Filter Toggle */
+.mobile-filter-btn{display:none}
+@media(max-width:900px){
+.filter-sidebar{position:fixed;left:0;top:0;height:100vh;z-index:150;transform:translateX(-100%);box-shadow:var(--shadow-lg)}
+.filter-sidebar.open{transform:translateX(0)}
+.mobile-filter-btn{display:flex}
+.filter-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:149;display:none}
+.filter-overlay.active{display:block}
+.content-area{padding:1rem}
+}
+@media(max-width:600px){
+.header-inner{gap:.5rem}
+.header-search{max-width:100%;order:10;min-width:100%}
+.header-actions{width:100%;justify-content:space-between;order:11}
+.stats-bar{padding:.5rem 1rem;font-size:.8rem}
+.modal-panel{width:100%}
+}
+
+/* Sort Dropdown */
+.sort-dropdown{position:relative}
+.sort-menu{position:absolute;top:100%;right:0;margin-top:.35rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:.35rem;min-width:200px;z-index:50;display:none}
+.sort-menu.active{display:block}
+.sort-option{padding:.45rem .75rem;border-radius:var(--radius-sm);font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:.4rem;width:100%;text-align:left;transition:background .15s}
+.sort-option:hover{background:var(--surface2)}
+.sort-option.active{color:var(--accent);font-weight:500}
+
+/* Cuisine tags */
+.cuisine-grid{display:flex;flex-wrap:wrap;gap:.3rem}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="landing-logo">Zürich <span>Gastro</span> Explorer</div>
+  <p class="landing-sub">Durchsuche über 7'000 Gastronomiebetriebe im Kanton Zürich – mit intelligenten Filtern, Fake-Detection und Export.</p>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" accept=".json" id="fileInput">
+    <span class="drop-zone-icon">📂</span>
+    <div class="drop-zone-text">
+      JSON-Datei hier <strong>ablegen</strong> oder <strong>klicken</strong><br>
+      <small style="color:var(--text3)">.json Datei mit Google Places Daten</small>
+    </div>
+  </div>
+
+  <div class="features stagger">
+    <div class="feature-card">
+      <span class="icon">🔍</span>
+      <h3>Smart Filter</h3>
+      <p>Volltextsuche, Standort, Kategorie, Bewertungen & mehr</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">🛡️</span>
+      <h3>Fake Detection</h3>
+      <p>Algorithmus erkennt verdächtige Einträge automatisch</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">📊</span>
+      <h3>CSV Export</h3>
+      <p>Gefilterte Ergebnisse als CSV herunterladen</p>
+    </div>
+  </div>
+
+  <button class="demo-btn" onclick="loadDemo()">Demo-Modus starten →</button>
+</div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:700">Daten werden geladen…</div>
+  <div class="loader-bar"><div class="loader-bar-inner" id="loaderBar"></div></div>
+  <div class="loader-text" id="loaderText">Einträge werden analysiert…</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-logo">Zürich <span>Gastro</span></div>
+      <div class="header-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Name, Adresse, Küche, Keyword…" autocomplete="off">
+      </div>
+      <div class="header-actions">
+        <button class="header-btn mobile-filter-btn" onclick="toggleMobileFilter()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filter
+        </button>
+        <div class="view-toggle">
+          <button class="active" onclick="setView('grid')" id="btnGrid" title="Grid">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button onclick="setView('list')" id="btnList" title="Liste">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="sort-dropdown">
+          <button class="header-btn" onclick="toggleSortMenu()" id="sortBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+            Sortierung
+          </button>
+          <div class="sort-menu" id="sortMenu"></div>
+        </div>
+        <button class="header-btn" onclick="exportCSV()" title="CSV Export">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="result-count" id="resultCount"></div>
+    <div class="active-filters" id="activeFilters"></div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="main-layout">
+    <div class="filter-overlay" id="filterOverlay" onclick="toggleMobileFilter()"></div>
+    <!-- Sidebar -->
+    <aside class="filter-sidebar" id="filterSidebar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <span style="font-weight:600;font-size:.95rem">Filter</span>
+        <button class="clear-all-btn" onclick="clearAllFilters()">Alle zurücksetzen</button>
+      </div>
+
+      <!-- Trade -->
+      <div class="filter-section">
+        <div class="filter-label">Kategorie</div>
+        <div class="toggle-group" id="tradeFilter"></div>
+      </div>
+
+      <!-- Cuisine -->
+      <div class="filter-section">
+        <div class="filter-label">Küche / Stil</div>
+        <div class="cuisine-grid" id="cuisineFilter"></div>
+      </div>
+
+      <!-- City -->
+      <div class="filter-section">
+        <div class="filter-label">Standort <button onclick="clearCityFilter()">Zurücksetzen</button></div>
+        <div class="city-quick" id="cityQuick"></div>
+        <input type="text" class="city-search" id="citySearch" placeholder="Gemeinde suchen…">
+        <div class="city-list" id="cityList"></div>
+      </div>
+
+      <!-- Rating -->
+      <div class="filter-section">
+        <div class="filter-label">Bewertung</div>
+        <div class="range-wrap">
+          <label>Mindestbewertung <span id="ratingVal">1.0</span></label>
+          <input type="range" min="1" max="5" step="0.1" value="1" id="ratingSlider" oninput="onRatingChange(this.value)">
+        </div>
+        <div style="margin-top:.75rem" class="range-wrap">
+          <label>Min. Bewertungen <span id="reviewVal">40</span></label>
+          <input type="range" min="0" max="100" value="0" id="reviewSlider" oninput="onReviewChange(this.value)">
+        </div>
+        <div class="review-presets" id="reviewPresets"></div>
+      </div>
+
+      <!-- Trust -->
+      <div class="filter-section">
+        <div class="filter-label">Vertrauenswürdigkeit</div>
+        <div class="trust-toggles" id="trustFilter"></div>
+      </div>
+
+      <!-- Types -->
+      <div class="filter-section">
+        <div class="filter-label">Typ (Google)</div>
+        <div class="toggle-group" id="typeFilter" style="max-height:200px;overflow-y:auto"></div>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="content-area">
+      <div class="cards-grid" id="cardsGrid"></div>
+      <div class="list-view" id="listView">
+        <table class="list-table">
+          <thead><tr id="listHead"></tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <span class="icon">🔍</span>
+        <h3 style="font-size:1.1rem;margin-bottom:.5rem">Keine Ergebnisse</h3>
+        <p style="font-size:.88rem">Versuche andere Filter oder Suchbegriffe.</p>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-panel">
+    <div class="modal-close"><button onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let allPlaces = [];
+let filtered = [];
+let currentPage = 1;
+const PER_PAGE = 48;
+let currentView = 'grid';
+let currentSort = {key:'reviewCount',dir:'desc'};
+
+// Filter state
+let filters = {
+  search: '',
+  trades: new Set(),
+  cuisines: new Set(),
+  cities: new Set(),
+  minRating: 1.0,
+  minReviews: 40,
+  trust: new Set(),
+  types: new Set()
+};
+
+// Indexes
+let cityIndex = {};    // city -> count
+let typeIndex = {};    // type -> count
+let tradeIndex = {};   // trade -> count
+let cuisineIndex = {}; // cuisine -> count
+
+// Cuisine mapping from types
+const CUISINE_MAP = {
+  'italian_restaurant': {label:'Italienisch', icon:'🇮🇹'},
+  'swiss_restaurant': {label:'Schweizer Küche', icon:'🇨🇭'},
+  'turkish_restaurant': {label:'Türkisch', icon:'🧆'},
+  'thai_restaurant': {label:'Thailändisch', icon:'🍜'},
+  'japanese_restaurant': {label:'Japanisch', icon:'🇯🇵'},
+  'chinese_restaurant': {label:'Chinesisch', icon:'🥡'},
+  'indian_restaurant': {label:'Indisch', icon:'🇮🇳'},
+  'vietnamese_restaurant': {label:'Vietnamesisch', icon:'🍲'},
+  'korean_restaurant': {label:'Koreanisch', icon:'🇰🇷'},
+  'mexican_restaurant': {label:'Mexikanisch', icon:'🌮'},
+  'greek_restaurant': {label:'Griechisch', icon:'🇬🇷'},
+  'mediterranean_restaurant': {label:'Mediterran', icon:'🫒'},
+  'american_restaurant': {label:'Amerikanisch', icon:'🇺🇸'},
+  'french_restaurant': {label:'Französisch', icon:'🇫🇷'},
+  'spanish_restaurant': {label:'Spanisch', icon:'🇪🇸'},
+  'lebanese_restaurant': {label:'Libanesisch', icon:'🇱🇧'},
+  'asian_restaurant': {label:'Asiatisch', icon:'🥢'},
+  'european_restaurant': {label:'Europäisch', icon:'🍽️'},
+  'pizza_restaurant': {label:'Pizzeria', icon:'🍕'},
+  'sushi_restaurant': {label:'Sushi', icon:'🍣'},
+  'kebab_shop': {label:'Döner/Kebab', icon:'🥙'},
+  'hamburger_restaurant': {label:'Burger', icon:'🍔'},
+  'steak_house': {label:'Steakhouse', icon:'🥩'},
+  'vegetarian_restaurant': {label:'Vegetarisch', icon:'🥗'},
+  'vegan_restaurant': {label:'Vegan', icon:'🌱'},
+  'fast_food_restaurant': {label:'Fast Food', icon:'🍟'},
+  'seafood_restaurant': {label:'Seafood', icon:'🦐'},
+  'breakfast_restaurant': {label:'Frühstück', icon:'🥞'},
+  'bistro': {label:'Bistro', icon:'🍴'},
+};
+
+const TRADE_ICONS = {
+  'Restaurant':'🍽️','Bar':'🍺','Café':'☕','Hotel':'🏨','Bäckerei':'🥐','Takeaway':'🥡'
+};
+
+// Type display names (selected interesting ones)
+const TYPE_DISPLAY = {
+  'night_club':'Nachtclub','cocktail_bar':'Cocktailbar','lounge_bar':'Loungebar',
+  'hookah_bar':'Shisha Bar','pub':'Pub','wine_bar':'Weinbar','bar_and_grill':'Bar & Grill',
+  'ice_cream_shop':'Eisdiele','coffee_shop':'Coffee Shop','bakery':'Bäckerei',
+  'confectionery':'Konditorei','pastry_shop':'Patisserie','dessert_shop':'Desserts',
+  'sandwich_shop':'Sandwich Shop','snack_bar':'Snack Bar',
+  'meal_takeaway':'Takeaway','meal_delivery':'Lieferservice','food_delivery':'Lieferdienst',
+  'catering_service':'Catering','pizza_delivery':'Pizza Lieferung'
+};
+
+// ===== HELPERS =====
+function extractCity(address) {
+  if (!address) return '';
+  const parts = address.split(',');
+  if (parts.length < 2) return address.trim();
+  const last = parts[parts.length - 1].trim();
+  const tokens = last.split(/\s+/);
+  if (tokens.length >= 2 && /^\d{4,5}$/.test(tokens[0])) return tokens.slice(1).join(' ');
+  return last;
+}
+
+function computeTrustScore(p) {
+  let score = 70; // base
+  const reasons = [];
+
+  // High rating + low reviews = suspicious
+  if (p.rating >= 4.8 && p.reviewCount < 60) { score -= 25; reasons.push({t:'Sehr hohes Rating bei wenigen Bewertungen', neg:true}); }
+  else if (p.rating >= 4.5 && p.reviewCount < 50) { score -= 15; reasons.push({t:'Hohes Rating bei wenigen Bewertungen', neg:true}); }
+
+  // Good review count
+  if (p.reviewCount >= 200) { score += 15; reasons.push({t:'Viele Bewertungen ('+p.reviewCount+')', neg:false}); }
+  else if (p.reviewCount >= 100) { score += 10; reasons.push({t:'Solide Anzahl Bewertungen', neg:false}); }
+  else if (p.reviewCount < 50) { score -= 5; reasons.push({t:'Wenige Bewertungen', neg:true}); }
+
+  // Website
+  if (p.website) { score += 10; reasons.push({t:'Website vorhanden', neg:false}); }
+  else { score -= 10; reasons.push({t:'Keine Website', neg:true}); }
+
+  // Phone
+  if (p.phone) { score += 5; }
+  else { score -= 5; reasons.push({t:'Keine Telefonnummer', neg:true}); }
+
+  // Photos
+  if (p.photos && p.photos.length >= 3) { score += 5; reasons.push({t:'Mehrere Fotos vorhanden', neg:false}); }
+  else if (!p.photos || p.photos.length === 0) { score -= 5; reasons.push({t:'Keine Fotos', neg:true}); }
+
+  // Perfect 5.0
+  if (p.rating === 5.0) { score -= 10; reasons.push({t:'Perfekte 5.0 Bewertung', neg:true}); }
+
+  // Rating below 3
+  if (p.rating < 3.0) { score -= 10; reasons.push({t:'Niedrige Bewertung ('+p.rating+')', neg:true}); }
+
+  score = Math.max(0, Math.min(100, score));
+
+  let level, badge;
+  if (score >= 65) { level = 'trusted'; badge = '✅'; }
+  else if (score >= 40) { level = 'review'; badge = '⚠️'; }
+  else { level = 'suspicious'; badge = '🚩'; }
+
+  return {score, level, badge, reasons};
+}
+
+function starsSVG(rating, size=14) {
+  let html = '';
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.3;
+  for (let i = 0; i < 5; i++) {
+    if (i < full) html += `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    else if (i === full && half) html += `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><defs><linearGradient id="hg"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#E8E6E1"/></linearGradient></defs><path fill="url(#hg)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    else html += `<svg class="empty" width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+  }
+  return html;
+}
+
+function getCuisines(types) {
+  const c = [];
+  for (const t of types) {
+    if (CUISINE_MAP[t]) c.push(t);
+  }
+  return c;
+}
+
+function getDisplayTypes(types) {
+  const d = [];
+  for (const t of types) {
+    if (TYPE_DISPLAY[t]) d.push({key:t, label:TYPE_DISPLAY[t]});
+  }
+  return d;
+}
+
+// Debounce
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+// ===== DATA LOADING =====
+function processData(raw) {
+  let places;
+  if (raw.places) places = raw.places;
+  else if (Array.isArray(raw)) places = raw;
+  else if (raw.results) places = raw.results;
+  else throw new Error('Unbekanntes JSON-Format');
+
+  // Normalize
+  allPlaces = places.map(p => {
+    const city = extractCity(p.address || p.formatted_address || p.vicinity || '');
+    const trust = computeTrustScore(p);
+    const cuisines = getCuisines(p.types || []);
+    // Searchable text
+    const searchText = [p.name, p.address, p.trade, ...(p.types||[]), ...cuisines.map(c=>CUISINE_MAP[c]?.label||'')].join(' ').toLowerCase();
+
+    return {
+      ...p,
+      city,
+      trust,
+      cuisines,
+      searchText,
+      _rating: p.rating || 0,
+      _reviews: p.reviewCount || p.user_ratings_total || 0
+    };
+  });
+
+  // Build indexes
+  cityIndex = {}; typeIndex = {}; tradeIndex = {}; cuisineIndex = {};
+  for (const p of allPlaces) {
+    if (p.city) cityIndex[p.city] = (cityIndex[p.city]||0) + 1;
+    if (p.trade) tradeIndex[p.trade] = (tradeIndex[p.trade]||0) + 1;
+    for (const t of (p.types||[])) {
+      if (TYPE_DISPLAY[t]) typeIndex[t] = (typeIndex[t]||0) + 1;
+    }
+    for (const c of p.cuisines) {
+      cuisineIndex[c] = (cuisineIndex[c]||0) + 1;
+    }
+  }
+
+  // Set min reviews from data
+  const minR = Math.min(...allPlaces.map(p=>p._reviews));
+  document.getElementById('reviewSlider').min = 0;
+  document.getElementById('reviewSlider').value = 0;
+  filters.minReviews = minR;
+  updateReviewLabel(0);
+}
+
+function buildUI() {
+  // Trade filter
+  const tradeEl = document.getElementById('tradeFilter');
+  tradeEl.innerHTML = '';
+  const trades = Object.entries(tradeIndex).sort((a,b)=>b[1]-a[1]);
+  for (const [t, cnt] of trades) {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.dataset.value = t;
+    btn.innerHTML = `${TRADE_ICONS[t]||'📍'} ${t} <span class="cnt">${cnt}</span>`;
+    btn.onclick = () => toggleFilter('trades', t, btn);
+    tradeEl.appendChild(btn);
+  }
+
+  // Cuisine filter
+  const cuisineEl = document.getElementById('cuisineFilter');
+  cuisineEl.innerHTML = '';
+  const cuisines = Object.entries(cuisineIndex).sort((a,b)=>b[1]-a[1]);
+  for (const [c, cnt] of cuisines) {
+    const info = CUISINE_MAP[c];
+    if (!info) continue;
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.dataset.value = c;
+    btn.innerHTML = `${info.icon} ${info.label} <span class="cnt">${cnt}</span>`;
+    btn.onclick = () => toggleFilter('cuisines', c, btn);
+    cuisineEl.appendChild(btn);
+  }
+
+  // City filter
+  const cities = Object.entries(cityIndex).sort((a,b)=>b[1]-a[1]);
+  // Quick buttons (top 8)
+  const quickEl = document.getElementById('cityQuick');
+  quickEl.innerHTML = '';
+  const quickCities = cities.slice(0,8);
+  for (const [c, cnt] of quickCities) {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.dataset.city = c;
+    btn.innerHTML = `${c} <span class="cnt">${cnt}</span>`;
+    btn.onclick = () => toggleCity(c, btn);
+    quickEl.appendChild(btn);
+  }
+
+  // City list
+  renderCityList(cities);
+
+  // City search
+  const citySearchEl = document.getElementById('citySearch');
+  citySearchEl.oninput = debounce(() => {
+    const q = citySearchEl.value.toLowerCase();
+    const f = q ? cities.filter(([c])=>c.toLowerCase().includes(q)) : cities;
+    renderCityList(f);
+  }, 200);
+
+  // Review presets
+  const presets = [40, 100, 200, 500, 1000];
+  const presetsEl = document.getElementById('reviewPresets');
+  presetsEl.innerHTML = '';
+  for (const v of presets) {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.textContent = v + '+';
+    btn.onclick = () => {
+      const slider = document.getElementById('reviewSlider');
+      const sv = reviewToSlider(v);
+      slider.value = sv;
+      onReviewChange(sv);
+    };
+    presetsEl.appendChild(btn);
+  }
+
+  // Trust filter
+  const trustEl = document.getElementById('trustFilter');
+  trustEl.innerHTML = '';
+  [{val:'trusted',label:'✅ Vertrauenswürdig'},{val:'review',label:'⚠️ Prüfen'},{val:'suspicious',label:'🚩 Verdächtig'}].forEach(({val,label}) => {
+    const btn = document.createElement('button');
+    btn.className = 'trust-btn';
+    btn.dataset.trust = val;
+    btn.textContent = label;
+    btn.onclick = () => toggleFilter('trust', val, btn);
+    trustEl.appendChild(btn);
+  });
+
+  // Type filter
+  const typeEl = document.getElementById('typeFilter');
+  typeEl.innerHTML = '';
+  const types = Object.entries(typeIndex).sort((a,b)=>b[1]-a[1]);
+  for (const [t, cnt] of types) {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn';
+    btn.dataset.value = t;
+    btn.innerHTML = `${TYPE_DISPLAY[t]||t} <span class="cnt">${cnt}</span>`;
+    btn.onclick = () => toggleFilter('types', t, btn);
+    typeEl.appendChild(btn);
+  }
+
+  // Sort menu
+  buildSortMenu();
+
+  // Search
+  document.getElementById('searchInput').oninput = debounce(() => {
+    filters.search = document.getElementById('searchInput').value.toLowerCase().trim();
+    currentPage = 1;
+    applyFilters();
+  }, 300);
+}
+
+function renderCityList(cities) {
+  const el = document.getElementById('cityList');
+  // Only show top 50 for performance
+  const shown = cities.slice(0, 50);
+  el.innerHTML = shown.map(([c, cnt]) => {
+    const checked = filters.cities.has(c) ? 'checked' : '';
+    return `<label class="city-item"><input type="checkbox" ${checked} onchange="toggleCity('${c.replace(/'/g,"\\'")}')"><span>${c}</span><span class="cnt">${cnt}</span></label>`;
+  }).join('');
+}
+
+// Review slider: logarithmic
+function sliderToReview(v) {
+  v = parseFloat(v);
+  if (v === 0) return 40; // min in dataset
+  return Math.round(40 + (Math.pow(v/100, 2) * 14653));
+}
+function reviewToSlider(r) {
+  if (r <= 40) return 0;
+  return Math.round(Math.sqrt((r-40)/14653)*100);
+}
+function updateReviewLabel(v) {
+  const r = sliderToReview(v);
+  document.getElementById('reviewVal').textContent = r >= 14000 ? '14000+' : r;
+  filters.minReviews = r;
+}
+
+function onRatingChange(v) {
+  document.getElementById('ratingVal').textContent = parseFloat(v).toFixed(1);
+  filters.minRating = parseFloat(v);
+  currentPage = 1;
+  applyFilters();
+}
+
+function onReviewChange(v) {
+  updateReviewLabel(v);
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleFilter(set, val, btn) {
+  if (filters[set].has(val)) {
+    filters[set].delete(val);
+    if(btn) btn.classList.remove('active');
+  } else {
+    filters[set].add(val);
+    if(btn) btn.classList.add('active');
+  }
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleCity(city, btn) {
+  if (filters.cities.has(city)) {
+    filters.cities.delete(city);
+  } else {
+    filters.cities.add(city);
+  }
+  // Update UI
+  document.querySelectorAll('#cityQuick .toggle-btn').forEach(b => {
+    b.classList.toggle('active', filters.cities.has(b.dataset.city));
+  });
+  document.querySelectorAll('#cityList input[type="checkbox"]').forEach(cb => {
+    const label = cb.parentElement.querySelector('span').textContent;
+    cb.checked = filters.cities.has(label);
+  });
+  currentPage = 1;
+  applyFilters();
+}
+
+function clearCityFilter() {
+  filters.cities.clear();
+  document.querySelectorAll('#cityQuick .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#cityList input').forEach(cb => cb.checked = false);
+  currentPage = 1;
+  applyFilters();
+}
+
+function clearAllFilters() {
+  filters = {search:'',trades:new Set(),cuisines:new Set(),cities:new Set(),minRating:1.0,minReviews:40,trust:new Set(),types:new Set()};
+  document.getElementById('searchInput').value = '';
+  document.getElementById('ratingSlider').value = 1;
+  document.getElementById('ratingVal').textContent = '1.0';
+  document.getElementById('reviewSlider').value = 0;
+  updateReviewLabel(0);
+  document.querySelectorAll('.toggle-btn.active, .trust-btn.active').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#cityList input').forEach(cb => cb.checked = false);
+  currentPage = 1;
+  applyFilters();
+}
+
+// ===== FILTER ENGINE =====
+function applyFilters() {
+  filtered = allPlaces.filter(p => {
+    if (filters.search && !p.searchText.includes(filters.search)) return false;
+    if (filters.trades.size && !filters.trades.has(p.trade)) return false;
+    if (filters.cuisines.size && !p.cuisines.some(c => filters.cuisines.has(c))) return false;
+    if (filters.cities.size && !filters.cities.has(p.city)) return false;
+    if (p._rating < filters.minRating) return false;
+    if (p._reviews < filters.minReviews) return false;
+    if (filters.trust.size && !filters.trust.has(p.trust.level)) return false;
+    if (filters.types.size && !(p.types||[]).some(t => filters.types.has(t))) return false;
+    return true;
+  });
+
+  // Sort
+  sortFiltered();
+
+  // Render
+  renderResults();
+  renderActiveFilters();
+  updateResultCount();
+}
+
+function sortFiltered() {
+  const {key, dir} = currentSort;
+  const m = dir === 'asc' ? 1 : -1;
+  filtered.sort((a, b) => {
+    let va, vb;
+    if (key === 'rating') { va = a._rating; vb = b._rating; }
+    else if (key === 'reviewCount') { va = a._reviews; vb = b._reviews; }
+    else if (key === 'name') { va = (a.name||'').toLowerCase(); vb = (b.name||'').toLowerCase(); return va < vb ? -m : va > vb ? m : 0; }
+    else if (key === 'trust') { va = a.trust.score; vb = b.trust.score; }
+    else { va = a._reviews; vb = b._reviews; }
+    return (va - vb) * m;
+  });
+}
+
+function buildSortMenu() {
+  const opts = [
+    {key:'reviewCount',dir:'desc',label:'Meiste Bewertungen'},
+    {key:'reviewCount',dir:'asc',label:'Wenigste Bewertungen'},
+    {key:'rating',dir:'desc',label:'Beste Bewertung'},
+    {key:'rating',dir:'asc',label:'Schlechteste Bewertung'},
+    {key:'name',dir:'asc',label:'Name A–Z'},
+    {key:'name',dir:'desc',label:'Name Z–A'},
+    {key:'trust',dir:'desc',label:'Vertrauenswürdigste'},
+  ];
+  const menu = document.getElementById('sortMenu');
+  menu.innerHTML = opts.map(o => {
+    const active = o.key===currentSort.key && o.dir===currentSort.dir ? 'active' : '';
+    return `<button class="sort-option ${active}" onclick="setSort('${o.key}','${o.dir}')">${o.label}</button>`;
+  }).join('');
+}
+
+function setSort(key, dir) {
+  currentSort = {key, dir};
+  document.getElementById('sortMenu').classList.remove('active');
+  buildSortMenu();
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleSortMenu() {
+  document.getElementById('sortMenu').classList.toggle('active');
+}
+
+// Close sort on click outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.sort-dropdown')) {
+    document.getElementById('sortMenu')?.classList.remove('active');
+  }
+});
+
+// ===== RENDER =====
+function renderResults() {
+  if (currentView === 'grid') renderGrid();
+  else renderList();
+  renderPagination();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('cardsGrid');
+  const listView = document.getElementById('listView');
+  const empty = document.getElementById('emptyState');
+  grid.style.display = '';
+  listView.style.display = 'none';
+
+  if (filtered.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+
+  grid.innerHTML = page.map((p, i) => {
+    const cuisineBadges = p.cuisines.slice(0,2).map(c => {
+      const info = CUISINE_MAP[c];
+      return `<span class="badge badge-type">${info.icon} ${info.label}</span>`;
+    }).join('');
+    const tradeBadge = p.trade ? `<span class="badge badge-trade">${TRADE_ICONS[p.trade]||''} ${p.trade}</span>` : '';
+
+    return `<div class="card fade-in" style="animation-delay:${Math.min(i*30,300)}ms" onclick="openModal('${p.id}')">
+      <div class="card-header">
+        <div class="card-name">${esc(p.name||'Unbekannt')}</div>
+        <span class="card-trust" title="Trust: ${p.trust.score}">${p.trust.badge}</span>
+      </div>
+      <div class="card-rating">
+        <div class="stars" style="color:var(--yellow)">${starsSVG(p._rating)}</div>
+        <span class="rating-num">${p._rating.toFixed(1)}</span>
+        <span class="review-count">(${p._reviews.toLocaleString('de-CH')})</span>
+      </div>
+      <div class="card-address">${esc(p.address||'–')}</div>
+      <div class="card-badges">${tradeBadge}${cuisineBadges}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderList() {
+  const grid = document.getElementById('cardsGrid');
+  const listView = document.getElementById('listView');
+  const empty = document.getElementById('emptyState');
+  grid.style.display = 'none';
+  listView.style.display = '';
+
+  if (filtered.length === 0) {
+    listView.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Head
+  const cols = [
+    {key:'name',label:'Name'},{key:null,label:'Gemeinde'},{key:null,label:'Kategorie'},
+    {key:'rating',label:'Ø Bewertung'},{key:'reviewCount',label:'Bewertungen'},
+    {key:'trust',label:'Trust'},{key:null,label:'Links'}
+  ];
+  document.getElementById('listHead').innerHTML = cols.map(c => {
+    const sorted = c.key && c.key === currentSort.key;
+    const arrow = sorted ? (currentSort.dir==='asc'?'↑':'↓') : '↕';
+    const cls = sorted ? 'sorted' : '';
+    const click = c.key ? `onclick="listSort('${c.key}')"` : '';
+    return `<th class="${cls}" ${click}>${c.label}${c.key?`<span class="sort-arrow">${arrow}</span>`:''}</th>`;
+  }).join('');
+
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+
+  document.getElementById('listBody').innerHTML = page.map(p => {
+    const mapsLink = p.gmapsUrl ? `<a href="${p.gmapsUrl}" target="_blank" style="color:var(--accent);font-size:.78rem">Maps ↗</a>` : '–';
+    return `<tr>
+      <td class="name-cell" onclick="openModal('${p.id}')">${esc(p.name||'–')}</td>
+      <td class="addr-cell">${esc(p.city||'–')}</td>
+      <td><span class="badge badge-trade" style="font-size:.72rem">${TRADE_ICONS[p.trade]||''} ${p.trade||'–'}</span></td>
+      <td><div class="stars" style="color:var(--yellow);display:inline-flex;vertical-align:middle">${starsSVG(p._rating,12)}</div> ${p._rating.toFixed(1)}</td>
+      <td>${p._reviews.toLocaleString('de-CH')}</td>
+      <td>${p.trust.badge} <span style="font-size:.75rem;color:var(--text3)">${p.trust.score}</span></td>
+      <td>${mapsLink}</td>
+    </tr>`;
+  }).join('');
+}
+
+function listSort(key) {
+  if (currentSort.key === key) {
+    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort = {key, dir: key === 'name' ? 'asc' : 'desc'};
+  }
+  buildSortMenu();
+  currentPage = 1;
+  applyFilters();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('btnGrid').classList.toggle('active', v==='grid');
+  document.getElementById('btnList').classList.toggle('active', v==='list');
+  renderResults();
+}
+
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  const el = document.getElementById('pagination');
+  if (total <= 1) { el.innerHTML = ''; return; }
+
+  let html = '';
+  html += `<button class="page-btn" ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})">‹</button>`;
+
+  const range = [];
+  if (total <= 7) {
+    for (let i=1; i<=total; i++) range.push(i);
+  } else {
+    range.push(1);
+    if (currentPage > 3) range.push('…');
+    for (let i = Math.max(2, currentPage-1); i <= Math.min(total-1, currentPage+1); i++) range.push(i);
+    if (currentPage < total-2) range.push('…');
+    range.push(total);
+  }
+
+  for (const p of range) {
+    if (p === '…') {
+      html += `<span class="page-info">…</span>`;
+    } else {
+      html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    }
+  }
+
+  html += `<button class="page-btn" ${currentPage===total?'disabled':''} onclick="goPage(${currentPage+1})">›</button>`;
+  html += `<span class="page-info">${((currentPage-1)*PER_PAGE+1)}–${Math.min(currentPage*PER_PAGE, filtered.length)} von ${filtered.length.toLocaleString('de-CH')}</span>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderResults();
+  window.scrollTo({top:200, behavior:'smooth'});
+}
+
+function updateResultCount() {
+  document.getElementById('resultCount').innerHTML = `<span>${filtered.length.toLocaleString('de-CH')}</span> von ${allPlaces.length.toLocaleString('de-CH')} Einträgen`;
+}
+
+function renderActiveFilters() {
+  const el = document.getElementById('activeFilters');
+  let chips = [];
+  if (filters.search) chips.push({label:`Suche: "${filters.search}"`, clear:()=>{filters.search='';document.getElementById('searchInput').value='';}});
+  filters.trades.forEach(t => chips.push({label:`${TRADE_ICONS[t]||''} ${t}`, clear:()=>toggleFilter('trades',t,document.querySelector(`#tradeFilter [data-value="${t}"]`))}));
+  filters.cuisines.forEach(c => chips.push({label:`${CUISINE_MAP[c]?.icon||''} ${CUISINE_MAP[c]?.label||c}`, clear:()=>toggleFilter('cuisines',c,document.querySelector(`#cuisineFilter [data-value="${c}"]`))}));
+  filters.cities.forEach(c => chips.push({label:`📍 ${c}`, clear:()=>toggleCity(c)}));
+  if (filters.minRating > 1) chips.push({label:`≥ ${filters.minRating.toFixed(1)} ⭐`, clear:()=>{filters.minRating=1;document.getElementById('ratingSlider').value=1;document.getElementById('ratingVal').textContent='1.0';}});
+  if (filters.minReviews > 40) chips.push({label:`≥ ${filters.minReviews} Bewertungen`, clear:()=>{filters.minReviews=40;document.getElementById('reviewSlider').value=0;updateReviewLabel(0);}});
+  filters.trust.forEach(t => {
+    const labels = {trusted:'✅ Vertrauenswürdig',review:'⚠️ Prüfen',suspicious:'🚩 Verdächtig'};
+    chips.push({label:labels[t], clear:()=>toggleFilter('trust',t,document.querySelector(`[data-trust="${t}"]`))});
+  });
+  filters.types.forEach(t => chips.push({label:TYPE_DISPLAY[t]||t, clear:()=>toggleFilter('types',t,document.querySelector(`#typeFilter [data-value="${t}"]`))}));
+
+  el.innerHTML = chips.map(c =>
+    `<span class="filter-chip">${c.label}<button onclick="event.stopPropagation()">✕</button></span>`
+  ).join('');
+
+  // Attach clear handlers
+  el.querySelectorAll('.filter-chip button').forEach((btn, i) => {
+    btn.onclick = (e) => { e.stopPropagation(); chips[i].clear(); currentPage=1; applyFilters(); };
+  });
+
+  if (chips.length > 1) {
+    el.innerHTML += `<button class="clear-all-btn" onclick="clearAllFilters()">Alle entfernen</button>`;
+  }
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  const p = allPlaces.find(x => x.id === id);
+  if (!p) return;
+
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modalBody');
+
+  // Gallery
+  let gallery = '';
+  if (p.photos && p.photos.length) {
+    gallery = `<div class="modal-gallery">${p.photos.map(url =>
+      `<img src="${url}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">`
+    ).join('')}</div>`;
+  }
+
+  // Types
+  const allCuisines = p.cuisines.map(c => `<span class="badge badge-type">${CUISINE_MAP[c]?.icon||''} ${CUISINE_MAP[c]?.label||c}</span>`).join('');
+  const displayTypes = getDisplayTypes(p.types||[]).map(t => `<span class="badge badge-type">${t.label}</span>`).join('');
+  const tradeBadge = p.trade ? `<span class="badge badge-trade">${TRADE_ICONS[p.trade]||''} ${p.trade}</span>` : '';
+
+  // Trust explanation
+  const trustHTML = p.trust.reasons.map(r =>
+    `<div class="factor ${r.neg?'negative':'positive'}">${r.neg?'✗':'✓'} ${r.t}</div>`
+  ).join('');
+
+  // Google Maps link
+  const mapsLink = p.gmapsUrl || (p.id ? `https://www.google.com/maps/place/?q=place_id:${p.id}` : '');
+
+  body.innerHTML = `
+    ${gallery}
+    <div class="modal-name">${esc(p.name||'Unbekannt')}</div>
+    <div class="card-rating" style="margin-bottom:1rem;gap:.5rem">
+      <div class="stars" style="color:var(--yellow)">${starsSVG(p._rating, 18)}</div>
+      <span style="font-weight:600;font-size:1.1rem">${p._rating.toFixed(1)}</span>
+      <span style="color:var(--text3)">(${p._reviews.toLocaleString('de-CH')} Bewertungen)</span>
+    </div>
+
+    <div class="modal-section">
+      <h4>Details</h4>
+      <div class="modal-info-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${esc(p.address||'Adresse unbekannt')}
+      </div>
+      ${p.phone ? `<div class="modal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <a href="tel:${p.phone}" style="color:var(--accent)">${esc(p.phone)}</a></div>` : ''}
+      ${p.website ? `<div class="modal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <a href="${p.website}" target="_blank" style="color:var(--accent);word-break:break-all">${p.website.replace(/^https?:\/\/(www\.)?/,'').substring(0,40)}</a></div>` : ''}
+    </div>
+
+    <div class="modal-section">
+      <h4>Kategorien</h4>
+      <div class="modal-types">${tradeBadge}${allCuisines}${displayTypes}</div>
+    </div>
+
+    <div class="modal-section">
+      <h4>Vertrauensanalyse – Score: ${p.trust.score}/100 ${p.trust.badge}</h4>
+      <div class="trust-explain">${trustHTML || '<div class="factor neutral">Keine besonderen Auffälligkeiten</div>'}</div>
+    </div>
+
+    <div class="modal-cta">
+      ${mapsLink ? `<a href="${mapsLink}" target="_blank" class="btn-primary">📍 Google Maps öffnen</a>` : ''}
+      ${p.website ? `<a href="${p.website}" target="_blank" class="btn-secondary">🌐 Website</a>` : ''}
+    </div>
+  `;
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ESC to close
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ===== MOBILE =====
+function toggleMobileFilter() {
+  document.getElementById('filterSidebar').classList.toggle('open');
+  document.getElementById('filterOverlay').classList.toggle('active');
+}
+
+// ===== EXPORT =====
+function exportCSV() {
+  if (!filtered.length) return;
+  const rows = [['Name','Adresse','Stadt','Kategorie','Rating','Bewertungen','Trust Score','Trust Badge','Google Maps','Website']];
+  for (const p of filtered) {
+    rows.push([
+      `"${(p.name||'').replace(/"/g,'""')}"`,
+      `"${(p.address||'').replace(/"/g,'""')}"`,
+      `"${p.city||''}"`,
+      p.trade||'',
+      p._rating,
+      p._reviews,
+      p.trust.score,
+      p.trust.level,
+      p.gmapsUrl || '',
+      p.website || ''
+    ]);
+  }
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gastro-export-${filtered.length}-eintraege.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ===== ESCAPE HTML =====
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ===== FILE LOADING =====
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+function loadFile(file) {
+  if (!file.name.endsWith('.json')) {
+    alert('Bitte eine .json Datei auswählen.');
+    return;
+  }
+  showLoading();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      setTimeout(() => initApp(data), 100);
+    } catch(err) {
+      hideLoading();
+      alert('Fehler beim Lesen der JSON-Datei: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showLoading() {
+  document.getElementById('landing').style.display = 'none';
+  const loading = document.getElementById('loading');
+  loading.classList.add('active');
+  document.getElementById('loaderBar').style.width = '20%';
+}
+
+function hideLoading() {
+  document.getElementById('loading').classList.remove('active');
+}
+
+function initApp(data) {
+  const bar = document.getElementById('loaderBar');
+  const txt = document.getElementById('loaderText');
+
+  bar.style.width = '40%';
+  txt.textContent = 'Daten werden verarbeitet…';
+
+  setTimeout(() => {
+    try {
+      processData(data);
+      bar.style.width = '70%';
+      txt.textContent = `${allPlaces.length.toLocaleString('de-CH')} Einträge geladen – UI wird aufgebaut…`;
+
+      setTimeout(() => {
+        buildUI();
+        bar.style.width = '100%';
+
+        setTimeout(() => {
+          hideLoading();
+          document.getElementById('app').classList.add('active');
+          filtered = [...allPlaces];
+          sortFiltered();
+          renderResults();
+          updateResultCount();
+          renderActiveFilters();
+        }, 300);
+      }, 100);
+    } catch(err) {
+      hideLoading();
+      document.getElementById('landing').style.display = '';
+      alert('Fehler bei der Datenverarbeitung: ' + err.message);
+    }
+  }, 200);
+}
+
+// ===== DEMO MODE =====
+function loadDemo() {
+  const demo = {
+    places: [
+      {id:'demo1',name:'Ristorante Bella Vista',address:'Bahnhofstrasse 12, 8001 Zürich',lat:47.369,lng:8.539,rating:4.5,reviewCount:312,website:'https://bellavista.ch',phone:'044 123 4567',photos:[],trade:'Restaurant',types:['restaurant','italian_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo2',name:'Café Müller',address:'Langstrasse 88, 8004 Zürich',lat:47.377,lng:8.527,rating:4.2,reviewCount:187,website:'https://cafe-mueller.ch',phone:'044 234 5678',photos:[],trade:'Café',types:['cafe','coffee_shop','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo3',name:'Kebab Palace',address:'Dorfstrasse 5, 8706 Küsnacht',lat:47.318,lng:8.583,rating:4.8,reviewCount:45,website:null,phone:'044 345 6789',photos:[],trade:'Restaurant',types:['restaurant','kebab_shop','turkish_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo4',name:'Hotel Seehof',address:'Seestrasse 1, 8802 Kilchberg',lat:47.321,lng:8.541,rating:4.1,reviewCount:523,website:'https://seehof.ch',phone:'044 456 7890',photos:[],trade:'Hotel',types:['hotel','lodging','restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo5',name:'Bäckerei Schneider',address:'Hauptstrasse 23, 8810 Horgen',lat:47.259,lng:8.597,rating:4.7,reviewCount:89,website:'https://baeckerei-schneider.ch',phone:'044 567 8901',photos:[],trade:'Bäckerei',types:['bakery','food_store','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo6',name:'Sushi Zen',address:'Niederdorfstrasse 45, 8001 Zürich',lat:47.373,lng:8.544,rating:4.4,reviewCount:256,website:'https://sushizen.ch',phone:'044 678 9012',photos:[],trade:'Restaurant',types:['restaurant','sushi_restaurant','japanese_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo7',name:'The Irish Pub',address:'Münstergasse 8, 8400 Winterthur',lat:47.498,lng:8.729,rating:3.9,reviewCount:678,website:'https://irishpub-winterthur.ch',phone:'052 789 0123',photos:[],trade:'Bar',types:['bar','pub','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo8',name:'Vegan Garden',address:'Josefstrasse 55, 8005 Zürich',lat:47.386,lng:8.527,rating:4.6,reviewCount:134,website:'https://vegangarden.ch',phone:'044 890 1234',photos:[],trade:'Restaurant',types:['restaurant','vegan_restaurant','vegetarian_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo9',name:'Pizzeria Napoli',address:'Marktplatz 3, 8820 Wädenswil',lat:47.230,lng:8.672,rating:5.0,reviewCount:42,website:null,phone:null,photos:[],trade:'Restaurant',types:['restaurant','pizza_restaurant','italian_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+      {id:'demo10',name:'Thai Orchid',address:'Zürcherstrasse 12, 8953 Dietikon',lat:47.398,lng:8.399,rating:4.3,reviewCount:198,website:'https://thaiorchid.ch',phone:'044 901 2345',photos:[],trade:'Restaurant',types:['restaurant','thai_restaurant','asian_restaurant','food','establishment'],hours:[],businessStatus:'OPERATIONAL'},
+    ]
+  };
+  showLoading();
+  setTimeout(() => initApp(demo), 300);
+}
+</script>
+</body>
+</html>
