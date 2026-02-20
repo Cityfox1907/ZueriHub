@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZüriHub – Kanton Zürich Branchenverzeichnis</title>
-<script>window.GMAPS_KEY = 'AIzaSyB1djuoI4by6_R_FZRuLfSY3Yp2H6m2bcA';</script>
+<script>window.GMAPS_KEY = 'DEIN_API_KEY_HIER';</script>
 <script async defer id="gmaps-script"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
@@ -191,8 +191,7 @@ a{color:var(--gold);text-decoration:none;transition:color var(--tr)}a:hover{colo
   <div class="nav-brand" onclick="goHome()">ZüriHub <i>Kt. Zürich</i></div>
   <div class="nav-tabs">
     <button class="nav-tab" data-v="home" onclick="goHome()">Start</button>
-    <button class="nav-tab" data-v="gastro" onclick="openHub('gastro')">Gastro</button>
-    <button class="nav-tab" data-v="handwerker" onclick="openHub('handwerker')">Handwerker</button>
+    <button class="nav-tab" data-v="gastro" onclick="openHub('gastro')">Gastronomie</button>
   </div>
   <div class="nav-ct" id="navCt"></div>
 </nav>
@@ -202,17 +201,12 @@ a{color:var(--gold);text-decoration:none;transition:color var(--tr)}a:hover{colo
   <!-- Welcome -->
   <section class="welcome" id="welcomeView">
     <h1>Züri<em>Hub</em></h1>
-    <p>Das vollständige Branchenverzeichnis für den Kanton Zürich. Gastronomie ab 40 Bewertungen, Handwerk ab 20 Bewertungen – alle Sterne, transparent filterbar.</p>
+    <p>Das vollständige Gastronomie-Verzeichnis für den Kanton Zürich. Alle Betriebe ab 40 Google-Bewertungen – von 1 bis 5 Sterne, transparent filterbar.</p>
     <div class="w-cards">
       <div class="w-card" onclick="openHub('gastro')">
         <div class="w-card-icon">🍽️</div>
-        <div class="w-card-t">Gastronomie</div>
+        <div class="w-card-t">Gastronomie entdecken</div>
         <div class="w-card-s">Restaurant · Bar · Café · Takeaway · Bäckerei · Hotel</div>
-      </div>
-      <div class="w-card" onclick="openHub('handwerker')">
-        <div class="w-card-icon">🔧</div>
-        <div class="w-card-t">Bau & Handwerk</div>
-        <div class="w-card-s">Elektriker · Sanitär · Maler · Gipser · Schreiner · Dachdecker</div>
       </div>
     </div>
   </section>
@@ -244,35 +238,6 @@ a{color:var(--gold);text-decoration:none;transition:color var(--tr)}a:hover{colo
       </div>
     </div>
     <div class="grid" id="grid-gastro"></div>
-  </section>
-
-  <!-- Hub: Handwerker -->
-  <section class="hub" id="hub-handwerker">
-    <div class="hub-head">
-      <div><div class="hub-title">Bau & Handwerk</div><div class="hub-count" id="ct-handwerker"></div></div>
-    </div>
-    <div class="search-wrap"><span class="search-icon">⌕</span><input class="search-input" id="search-handwerker" placeholder="Firma oder Branche suchen…" oninput="onSearch('handwerker')"></div>
-    <div class="filters" id="filters-handwerker"></div>
-    <div class="ctrl-row">
-      <div class="sort-wrap">
-        <select class="sort-sel" id="sort-handwerker" onchange="render('handwerker')">
-          <option value="rating-desc">Beste Bewertung</option>
-          <option value="rating-asc">Schlechteste Bewertung</option>
-          <option value="reviews-desc">Meiste Bewertungen</option>
-          <option value="name-asc">Name A–Z</option>
-        </select>
-        <div class="view-btns">
-          <button class="v-btn on" data-view="grid" onclick="setView('handwerker','grid',this)" title="Grid">▦</button>
-          <button class="v-btn" data-view="list" onclick="setView('handwerker','list',this)" title="Liste">☰</button>
-          <button class="v-btn" data-view="compact" onclick="setView('handwerker','compact',this)" title="Kompakt">▪▪</button>
-        </div>
-      </div>
-      <div class="mini-map-wrap" id="mapwrap-handwerker">
-        <button class="expand-btn" onclick="toggleMapExpand('handwerker')" title="Karte vergrössern">⤢</button>
-        <div id="minimap-handwerker" style="width:100%;height:100%"></div>
-      </div>
-    </div>
-    <div class="grid" id="grid-handwerker"></div>
   </section>
 
 </div>
@@ -687,81 +652,45 @@ function genDemo(cat) {
     {d:"Kloten",la:47.4514,lo:8.5849},{d:"Illnau-Effretikon",la:47.4132,lo:8.7144},
     {d:"Opfikon",la:47.4320,lo:8.5680},{d:"Wädenswil",la:47.2300,lo:8.6690},
     {d:"Volketswil",la:47.3920,lo:8.6870},{d:"Thalwil",la:47.2930,lo:8.5630},
-    {d:"Affoltern am Albis",la:47.2780,lo:8.4530}
+    {d:"Affoltern am Albis",la:47.2780,lo:8.4530},{d:"Adliswil",la:47.3100,lo:8.5240},
+    {d:"Rüti",la:47.2570,lo:8.8540},{d:"Schlieren",la:47.3970,lo:8.4480},
+    {d:"Regensdorf",la:47.4330,lo:8.4690},{d:"Wallisellen",la:47.4140,lo:8.5950}
   ];
-
-  const gastroNames = {
-    Restaurant: ["Kronenhalle","Zeughauskeller","Hiltl","Clouds","Le Dézaley","Alpenrose","Wirtschaft Neumarkt","Raclette Stube","Chez Fritz","Da Angela","Helvetia","Brasserie Lipp","Ristorante Bindella","Sala of Tokyo","Holy Cow","Lily's","Thai Garden","Pizzeria Molino","Rheinfelder Bierhalle","Zum Kropf","Volkshaus","Bürgli","Wirtschaft zum Wiesengrund","Restaurant Bauschänzli","Casa Ferlin","Sonnenberg","Rigiblick","Didi's Frieden","Zunfthaus zur Waag","Heugümper","Johanniter","Markthalle","Rosaly's","Restaurant Terrasse","Mère Catherine","Sein","Razzia","Linde Oberstrass","Outback Lodge","Ristorante Orsini","Nooba","Coco","Yooji's Bellevue","Miss Miu","Steakhouse Grill","Zum Alten Löwen","Maison Manesse","Pavillon Baur au Lac","Eden Garden","Münsterhof"],
-    Bar: ["Bar am Wasser","Old Crow","Widder Bar","Dante","Odeon","Tales Bar","Pony Bar","Raygrodski","Shamrock","Clouds Bar","Jade Bar","Floor 64","Rimini Bar","Sphères","Fritz","Toni Molkerei Bar","Gerold Bar","Kasheme","Labor Bar","Hive"],
-    "Café": ["Sprüngli","Conditorei Schober","Café Odeon","Café des Amis","Café Miyuko","Kafi Dihei","Milchbar","Vicafé","Mame","Café Henrici","Coffee Circle","Stoll Kaffee","Café Plüsch","Schwarzes Café","Kafischnaps","Kafi Franz","Kaffee Bar","Boréal Coffee","Miró Café","Nini Café"],
-    Takeaway: ["Yooji's","Negishi","Hiltl Take Away","Tibits to Go","Coop Take It","Holy Cow","Kebab Station","Sternen Grill","Poke House","Sushi Mania","Burger King Bahnhof","McDonald's HB","Dean & David","Äss-Bar","Vegi Voodoo King"],
-    "Bäckerei": ["Buchmann","Stocker","Fleischli","Jowa","Steiner Beck","Bäckerei Kloter","John Baker","Maison Blunt","Sutter Begg","Kleiner Beck","Hausbäckerei","Bäckerei Mehr","Brotmacher","Richi's","Bäckerei Gnädinger"],
-    Hotel: ["Baur au Lac","The Dolder Grand","Widder Hotel","Storchen","Schweizerhof","Marriott","Hilton Airport","Hyatt Regency","25hours Hotel","Hotel Helvetia","Greulich","Hotel Florhof","Sorell Hotel Seidenhof","Kindli","Renaissance Tower","B2 Boutique","Park Hyatt","Atlantis","Sheraton","Radisson Blu"],
+  const names = {
+    Restaurant: ["Kronenhalle","Zeughauskeller","Hiltl","Clouds Kitchen","Le Dézaley","Alpenrose","Wirtschaft Neumarkt","Raclette Stube","Chez Fritz","Helvetia","Brasserie Lipp","Ristorante Bindella","Sala of Tokyo","Holy Cow","Lily's","Thai Garden","Pizzeria Molino","Rheinfelder Bierhalle","Zum Kropf","Volkshaus","Bürgli","Restaurant Bauschänzli","Casa Ferlin","Sonnenberg","Rigiblick","Didi's Frieden","Zunfthaus zur Waag","Heugümper","Johanniter","Rosaly's","Mère Catherine","Sein","Razzia","Linde Oberstrass","Ristorante Orsini","Nooba","Coco","Miss Miu","Steakhouse Grill","Maison Manesse","Pavillon","Eden Garden","Münsterhof","Haus zum Rüden","Restaurant Terrasse","Outback Lodge","Markthalle","Wirtschaft Wiesengrund","Seerose","Löweneck","Altes Klösterli","Blaue Ente","Caduff's Wine Loft","Lindenhof","Quaglinos","Reithalle","Schipfe 16","Tao's","The Restaurant","Uto Kulm","Zur Zimmerleuten","Aura","Commihalle","Drei Stuben","El Lokal","Frau Gerolds Garten","Giesserei","Haute","Josef","Karl der Grosse","LaSalle","Neuhaus","Pumpstation","Restaurant Metropol","Sablier","Tüfi","Umami","Vivat","Waid","Ziegel Oh Lac","Accademia","Dal Moro's","Fork & Bottle","Gambrinus","Igniv","Kontiki","La Rôtisserie","Milano","Neni","Opera","Pastarazzi","Quartino","Rosi","Spaghetti Factory","Totò","Udo's","Bianchi","Cafetin","Elefant","Hafenkneipe","Old Town","Jasmine"],
+    Bar: ["Bar am Wasser","Old Crow","Widder Bar","Dante","Odeon","Tales Bar","Pony Bar","Raygrodski","Shamrock","Clouds Bar","Jade Bar","Floor 64","Rimini Bar","Sphères","Fritz","Toni Molkerei Bar","Gerold Bar","Kasheme","Labor Bar","Hive","Bauschänzli Bar","Nietturm","Purpur","Riffraff","Stüssihof","TapTab","Udo Bar","Werk 8","Xtra Bar","Zähringer","Bazillus","Cinchona","Dachkantine","El Internado","Frieda's Büxe","Gonzo","Helsinki","Icon","Jules Verne","Olé Olé"],
+    "Café": ["Sprüngli","Conditorei Schober","Café Odeon","Café des Amis","Café Miyuko","Kafi Dihei","Milchbar","Vicafé","Mame","Café Henrici","Coffee Circle","Stoll Kaffee","Café Plüsch","Kafischnaps","Kafi Franz","Boréal Coffee","Miró Café","Nini Café","Auer & Co","Birdie","Certo","DiVino","Ella","George Bar & Grill","Il Caffè","Josefine","Lotti","Maxwell","Nordbrücke","Prado","Razzia Café","Tobi","Urban","Viadukt Café","Wunderbar","Xocolat","Zentraleck","Frühling","Helvti","Kiosk","Quai","Schüür"],
+    Takeaway: ["Yooji's","Negishi","Hiltl Take Away","Tibits to Go","Kebab Station","Sternen Grill","Poke House","Sushi Mania","Dean & David","Äss-Bar","Vegi Voodoo King","Al Forno","Burrito Rico","City Wok","Döner Box","El Sabor","Falafel King","Green Point","House of Sushi","Istanbul Grill","Jade Wok","Karma Food","Lunchbox","Mango Thai","New York Pizza","Orient Express","Pizza Taxi","Quick Bites","Ramen Shop","Street Food Box","Taco Loco","Udon House","Vegan Kitchen","Wok Star","Yummy Box","Zurich Bites"],
+    "Bäckerei": ["Buchmann","Stocker","Fleischli","Jowa","Steiner Beck","John Baker","Maison Blunt","Sutter Begg","Kleiner Beck","Hausbäckerei","Brotmacher","Richi's","Bäckerei Gnädinger","Bäckerei Kloter","Alpenbrot","Backwerk","Deli Bake","Enzian Bäckerei","Frisch Gebacken","Goldkorn","Haus Brot","Kornhaus","Landbäckerei","Mühlenbrot","Naturbäck","Ofenfrisch","Pane Vivo","Rösli Bäckerei","Spycher","Vollkorn Weber"],
+    Hotel: ["Baur au Lac","The Dolder Grand","Widder Hotel","Storchen","Schweizerhof","Marriott","Hilton Airport","Hyatt Regency","25hours Hotel","Hotel Helvetia","Greulich","Hotel Florhof","Sorell Seidenhof","Kindli","Renaissance Tower","B2 Boutique","Park Hyatt","Atlantis","Sheraton","Radisson Blu","Ascot","Central Plaza","Eden au Lac","Glockenhof","Helmhaus","Limmathof","Marta","Opera House","Plattenhof","Rex","Seefeld","Townhouse"],
   };
-  const handwerkerNames = {
-    Elektriker: ["EKZ Elektrotechnik","Elektro Brunner","Meier Elektro","Schibli","Burkhalter","CKW Elektro","Amag Elektro","Helvetia Elektro","Dietlikon Elektro","Stadtwerk Elektro","Jung Elektro","Steffen Elektro","Blitz Elektro","Volta Elektro","AMP Elektro"],
-    "Sanitär": ["Sanitas","Sanitär Huber","Meier Sanitär","Züri-Sanitär","Rohr-Blitz","Stöckli Sanitär","Haustechnik AG","Badsanierung AG","Sanitär Express","Wasser-Profi"],
-    Maler: ["Suter & Söhne","Malergeschäft Brun","Farbe & Raum","Colorline","Maler Meister","Schenk Maler","Züri Maler","Malerteam Plus","Pinselstrich AG","Farbwerk"],
-    Gipser: ["Gipser Müller","Stuck & Putz AG","Gipsermeister Hotz","Wand-Profi","Verputz Zürich","Gipser Express","Stuckateur Lang","Gipserteam Nord","Müller Gips","Ausbau AG"],
-    Schreiner: ["Schreinerei Meier","Holz & Form","Möbelwerkstatt Zürich","Schreiner Huber","Tischler AG","Holzkunst","Cabinet Maker","Schreinerteam","Züri-Schreiner","Holzwerk Plus"],
-    Bodenleger: ["Bodenleger AG","Parkett Zürich","Floor Design","Bodenprofis","Laminat Express","Parkett Meister","Bodenkunst","Belag AG","Floor Master","Bodenwelt"],
-    Dachdecker: ["Spenglerei Keller","Dach & Fach","Bedachungen Müller","Züri-Dach","Dachdecker Express","Spengler Meier","Dachprofi","Flachdach AG","Steil+Flach","DachTeam"],
-    Schlosser: ["Schlosser Baumgartner","Metallbau Zürich","Stahl & Form","Schlosserei AG","Kunstschmiede","Metallwerk","Eisen & Stahl","Schlosserteam","MetallProfi","ZüriLock"],
-    "Heizung/Klima": ["HLK Fischer","Wärmetechnik AG","Klima Zürich","Heizung Meier","HVAC Systems","Lüftung Plus","Wärme Profi","Thermoplan","Klimakomfort","HeiztechTeam"],
-    Gartenbau: ["Gartenbau Schaffner","Grünwerk","Garten Eden","Landschaftsbau AG","Pflanzenwelt","ZüriGarten","Greenline","Gartenpflege Plus","Natur & Design","BioGarten"],
-    Zimmermann: ["Holzbau Müller","Zimmerei Keller","Holzkonstruktion AG","Dachstuhl Profi","Zimmermann Meier","Holzbau Plus","Gebälk AG","Zimmererteam","Tragwerk Holz","ÖkoBau"],
-    Plattenleger: ["Fliesen Fischer","Plattenbelag AG","Keramik Profi","Fliesen & Design","Plattenkunst","ZüriFliesen","Belag Meister","Mosaik AG","Stein & Platte","FliesenTeam"],
-  };
-
-  const names = cat === 'gastro' ? gastroNames : handwerkerNames;
-  const minRev = cat === 'gastro' ? 40 : 20;
   const places = [];
   let idx = 0;
-
-  Object.entries(names).forEach(([trade, nameList]) => {
-    nameList.forEach(name => {
+  Object.entries(names).forEach(([trade, list]) => {
+    list.forEach(name => {
       const loc = zh[Math.floor(Math.random() * zh.length)];
       const rating = Math.round((1.0 + Math.random() * 4.0) * 10) / 10;
-      const reviews = minRev + Math.floor(Math.random() * 2000);
+      const reviews = 40 + Math.floor(Math.random() * 3000);
       places.push({
-        id: `demo_${cat}_${idx}`,
-        name,
-        address: `${['Bahnhof','Limmat','See','Berg','Wald','Kirch','Dorf','Markt','Schul','Haupt'][Math.floor(Math.random()*10)]}strasse ${1+Math.floor(Math.random()*120)}, ${8000+Math.floor(Math.random()*99)} ${loc.d}`,
-        lat: loc.la + (Math.random() - .5) * .04,
-        lng: loc.lo + (Math.random() - .5) * .06,
+        id: `demo_${idx}`, name,
+        address: `${['Bahnhof','Limmat','See','Berg','Wald','Kirch','Dorf','Markt','Schul','Haupt','Rösli','Löwen','Mühle','Garten','Ring','Wein','Brunnen','Rathaus','Kreuz','Feld'][Math.floor(Math.random()*20)]}strasse ${1+Math.floor(Math.random()*120)}, ${8000+Math.floor(Math.random()*99)} ${loc.d}`,
+        lat: loc.la + (Math.random() - .5) * .04, lng: loc.lo + (Math.random() - .5) * .06,
         rating, reviewCount: reviews,
         gmapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(name + ' ' + loc.d + ' Zürich')}`,
-        website: '', phone: '',
-        photos: [],
-        trade,
-        types: [], hours: [],
-        businessStatus: 'OPERATIONAL',
+        website: '', phone: '', photos: [], trade, types: [], hours: [], businessStatus: 'OPERATIONAL',
       });
       idx++;
     });
   });
-
-  // Rankings
   const rankings = {};
-  const trades = [...new Set(places.map(p => p.trade))];
-  trades.forEach(trade => {
+  [...new Set(places.map(p => p.trade))].forEach(trade => {
     const tp = places.filter(p => p.trade === trade);
     const best = [...tp].sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
     const worst = [...tp].sort((a, b) => a.rating - b.rating);
     const most = [...tp].sort((a, b) => b.reviewCount - a.reviewCount);
-    rankings[trade] = {
-      total: tp.length,
-      top_rated: best.slice(0, 10).map(p => p.id),
-      worst_rated: worst.slice(0, 10).map(p => p.id),
-      most_reviewed: most.slice(0, 10).map(p => p.id),
-    };
+    rankings[trade] = { total: tp.length, top_rated: best.slice(0, 10).map(p => p.id), worst_rated: worst.slice(0, 10).map(p => p.id), most_reviewed: most.slice(0, 10).map(p => p.id) };
   });
-
-  return {
-    metadata: { generated: new Date().toISOString(), minReviews: minRev, region: 'Kanton Zürich', category: cat, totalResults: places.length },
-    rankings,
-    places,
-  };
+  return { metadata: { generated: new Date().toISOString(), minReviews: 40, region: 'Kanton Zürich', category: 'gastro', totalResults: places.length }, rankings, places };
 }
 
 // Override fetch for demo
