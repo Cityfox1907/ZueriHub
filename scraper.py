@@ -14,7 +14,7 @@ Setup:
 import os, json, time, math, requests
 from datetime import datetime
 
-API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY", "DEIN_API_KEY_HIER")
+API_KEY = os.environ.get("GOOGLE_PLACES_API_KEY", "AIzaSyB1djuoI4by6_R_FZRuLfSY3Yp2H6m2bcA")
 OUTPUT_DIR = "data"
 
 # Kanton Zürich Bounding Box
