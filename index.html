@@ -710,6 +710,45 @@ function doExportCSV(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
 
+// ── MOBILE PDF HELPERS ──
+function _pdfMobileSave(doc,fileName){
+  var blob=doc.output('blob');
+  // Layer 1: Web Share API — opens native iOS/Android share sheet
+  if(navigator.share&&typeof File!=='undefined'){
+    try{
+      var file=new File([blob],fileName,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:'ZüriHub Export'}).catch(function(){
+          _pdfFallback(blob,fileName);
+        });
+        return;
+      }
+    }catch(e){}
+  }
+  _pdfFallback(blob,fileName);
+}
+function _pdfFallback(blob,fileName){
+  // Layer 2: Full-screen iframe overlay showing PDF inline
+  var blobUrl=URL.createObjectURL(blob);
+  var overlay=document.createElement('div');
+  overlay.id='pdfOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column';
+  var bar=document.createElement('div');
+  bar.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0F47AF;color:#fff;flex-shrink:0';
+  bar.innerHTML='<span style="font-weight:600;font-size:.9rem">PDF Export</span>';
+  var closeBtn=document.createElement('button');
+  closeBtn.textContent='✕ Schliessen';
+  closeBtn.style.cssText='padding:6px 16px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer';
+  closeBtn.onclick=function(){document.body.removeChild(overlay);URL.revokeObjectURL(blobUrl)};
+  bar.appendChild(closeBtn);
+  overlay.appendChild(bar);
+  var iframe=document.createElement('iframe');
+  iframe.style.cssText='flex:1;border:none;width:100%';
+  iframe.src=blobUrl;
+  overlay.appendChild(iframe);
+  document.body.appendChild(overlay);
+}
+
 // ── EXPORT PDF ──
 function doExportPDF(){
   if(!FLT.length)return;document.getElementById('expMenu').classList.remove('on');
@@ -750,31 +789,9 @@ function doExportPDF(){
       didDrawPage:function(){doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text('ZüriHub – Seite '+doc.internal.getCurrentPageInfo().pageNumber,W/2,H-6,{align:'center'})}
     });
     if(max<FLT.length){var y=(doc.lastAutoTable?doc.lastAutoTable.finalY:26)+8;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Hinweis: Export auf '+fmt(max)+' von '+fmt(FLT.length)+' Eintraegen limitiert.',14,y)}
-    // Mobile-compatible PDF download
+    var fileName='ZüriHub-Export-'+FLT.length+'.pdf';
     var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if(isIOS){
-      // iOS Safari blocks blob downloads — open as data URI in new tab
-      var dataUri=doc.output('datauristring');
-      var win=window.open(dataUri,'_blank');
-      if(!win){
-        // Popup blocked fallback: use blob + object URL in same window
-        var blob=doc.output('blob');
-        var blobUrl=URL.createObjectURL(blob);
-        window.location.href=blobUrl;
-      }
-    }else if(isMobile){
-      // Android: blob URL approach works
-      var blob=doc.output('blob');
-      var blobUrl=URL.createObjectURL(blob);
-      var a=document.createElement('a');
-      a.href=blobUrl;a.download='ZüriHub-Export-'+FLT.length+'.pdf';
-      a.style.display='none';document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(blobUrl)},500);
-    }else{
-      doc.save('ZüriHub-Export-'+FLT.length+'.pdf');
-    }
+    if(isMobile){_pdfMobileSave(doc,fileName)}else{doc.save(fileName)}
   }catch(err){console.error('PDF Error:',err);alert('PDF-Export fehlgeschlagen: '+err.message)}
 }
 
