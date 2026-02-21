@@ -3,10 +3,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZüriHub – Gastronomie-Datenbank Kanton Zürich</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
@@ -214,8 +211,6 @@ input[type=“range”]::-webkit-slider-thumb{-webkit-appearance:none;width:16px
 .sdrop,.exp-drop{position:relative}
 .smenu,.exp-menu{position:absolute;top:100%;right:0;margin-top:.3rem;background:#fff;border:1.5px solid var(–border);border-radius:var(–radius);box-shadow:var(–shadow-lg);padding:.25rem;min-width:195px;z-index:50;display:none}
 .smenu.on,.exp-menu.on{display:block}
-.drop-ov{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.2);display:none}
-.drop-ov.on{display:block}
 .sopt{padding:.4rem .65rem;border-radius:var(–radius-sm);font-size:.8rem;color:var(–text2);display:flex;align-items:center;gap:.3rem;width:100%;text-align:left;transition:background .1s}
 .sopt:hover{background:var(–surface2)}.sopt.on{color:var(–primary);font-weight:600}
 .exp-menu{min-width:180px}
@@ -225,13 +220,12 @@ input[type=“range”]::-webkit-slider-thumb{-webkit-appearance:none;width:16px
 /* MOBILE */
 .mfbtn{display:none!important}
 @media(max-width:900px){
-.sidebar{position:fixed;left:0;top:0;height:100vh;height:100dvh;z-index:150;transform:translateX(-100%);box-shadow:var(–shadow-lg);padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))}.sidebar.open{transform:translateX(0)}.mfbtn{display:inline-flex!important}.content{padding:.6rem .75rem}
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:150;transform:translateX(-100%);box-shadow:var(–shadow-lg);padding-bottom:calc(1.5rem + env(safe-area-inset-bottom,0px))}.sidebar.open{transform:translateX(0)}.mfbtn{display:inline-flex!important}.content{padding:.6rem .75rem}
 }
 @media(max-width:640px){
-.header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;flex-wrap:nowrap;gap:.25rem;scrollbar-width:none;-webkit-overflow-scrolling:touch}.hactions::-webkit-scrollbar{display:none}.stats{padding:.35rem 0;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
-.sdrop,.exp-drop{position:static}
-.smenu,.exp-menu{position:fixed;top:auto;bottom:0;left:0;right:0;margin:0;border-radius:16px 16px 0 0;border:none;box-shadow:0 -4px 24px rgba(0,0,0,.15);padding:.5rem .5rem calc(.5rem + env(safe-area-inset-bottom,0px));z-index:200;max-height:60vh;overflow-y:auto}
-.smenu .sopt,.exp-menu .sopt{padding:.75rem .8rem;font-size:.92rem}
+.header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;flex-wrap:nowrap;gap:.25rem}.stats{padding:.35rem .75rem;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
+.smenu,.exp-menu{position:fixed;top:auto;bottom:0;left:0;right:0;margin:0;border-radius:14px 14px 0 0;border:none;box-shadow:0 -4px 20px rgba(0,0,0,.18);padding:.4rem;padding-bottom:calc(.4rem + env(safe-area-inset-bottom,0px));z-index:300}
+.smenu .sopt,.exp-menu .sopt{padding:.7rem .75rem;font-size:.9rem}
 }
 </style>
 
@@ -270,7 +264,6 @@ input[type=“range”]::-webkit-slider-thumb{-webkit-appearance:none;width:16px
       <div class="exp-drop"><button class="hbtn" onclick="toggleExport()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button><div class="exp-menu" id="expMenu"><button class="sopt" onclick="doExportCSV()">📄 CSV herunterladen</button><button class="sopt" onclick="doExportPDF()">📋 PDF herunterladen</button></div></div>
     </div>
   </div></header>
-  <div class="drop-ov" id="dropOv" onclick="closeDropdowns()"></div>
 
   <div class="stats"><div class="rcnt" id="rcnt"></div><div class="chips" id="chips"></div></div>
 
@@ -368,8 +361,6 @@ function kreisTag(a){const k=getKreis(a);return k?'<span class="kreis">K'+k+'</s
 function xCity(a){if(!a)return'';const p=a.split(',');if(p.length<2)return a.trim();const l=p[p.length-1].trim(),t=l.split(/\s+/);return t.length>=2&&/^\d{4,5}$/.test(t[0])?t.slice(1).join(' '):l}
 function stars(r,sz){sz=sz||13;let h='',fu=Math.floor(r),ha=r-fu>=.25;for(let i=0;i<5;i++){if(i<fu)h+='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';else if(i===fu&&ha)h+='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24"><defs><linearGradient id="hg'+sz+'"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#D4DCE8"/></linearGradient></defs><path fill="url(#hg'+sz+')" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';else h+='<svg class="e" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'}return h}
 function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-function sanitizeUrl(u){if(!u||typeof u!=='string')return'';u=u.trim();if(/^https?:\/\//i.test(u))return u;return''}
-function sanitizeId(id){if(!id||typeof id!=='string')return'';return id.replace(/[^A-Za-z0-9_\-]/g,'')}
 function debounce(fn,ms){var t;return function(){var a=arguments;clearTimeout(t);t=setTimeout(function(){fn.apply(null,a)},ms)}}
 function fmt(n){return n.toLocaleString('de-CH')}
 function s2rv(v){v=+v;if(!v)return 40;return Math.round(40+Math.pow(v/100,2)*14653)}
@@ -416,10 +407,6 @@ async function processAndBoot(raw){
   var bar=document.getElementById('pbar'),msg=document.getElementById('splashMsg');
   try{
     var places=Array.isArray(raw)?raw:(raw.places||raw.results||[]);
-    // Validate & sanitize entries
-    places=places.filter(function(p){
-      return p&&typeof p==='object'&&typeof p.name==='string'&&p.name.length>0&&typeof(p.rating)==='number'&&p.rating>=0&&p.rating<=5;
-    });
     bar.style.width='60%';msg.textContent=fmt(places.length)+' Einträge werden verarbeitet…';
     await new Promise(function(r){setTimeout(r,30)});
     var SKIP=new Set(['point_of_interest','establishment','food','store','service','food_store']);
@@ -430,7 +417,7 @@ async function processAndBoot(raw){
       var trade=p.trade||'';
       if(types.indexOf('shopping_mall')>=0||types.indexOf('department_store')>=0)trade='Einkaufszentrum';
       var st=[p.name,p.address,trade].concat(types).concat(cuisines.map(function(c){return(CMAP[c]||{}).l||''})).join(' ').toLowerCase();
-      return{id:sanitizeId(p.id||p.place_id||''),name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:sanitizeUrl(p.gmapsUrl||''),web:sanitizeUrl(p.website||''),ph:(p.phone||'').replace(/[^\d\s+\-()]/g,''),pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:trade,types:types,cuisines:cuisines,city:city,searchText:st};
+      return{id:p.id||p.place_id||'',name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:p.gmapsUrl||'',web:p.website||'',ph:p.phone||'',pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:trade,types:types,cuisines:cuisines,city:city,searchText:st};
     });
     bar.style.width='75%';msg.textContent='Indizes werden aufgebaut…';
     await new Promise(function(r){setTimeout(r,20)});
@@ -593,25 +580,10 @@ function buildSortMenu(){
   if(geoOrigin&&geoRadius>0)opts.unshift({k:'distance',d:'asc',l:'📍 Nächste zuerst'},{k:'distance',d:'desc',l:'📍 Weiteste zuerst'});
   document.getElementById('sortMenu').innerHTML=opts.map(function(o){return '<button class="sopt '+(o.k===sort.k&&o.d===sort.d?'on':'')+'" onclick="setSort(\''+o.k+"','"+o.d+"')\">"+o.l+'</button>'}).join('');
 }
-function setSort(k,d){sort={k:k,d:d};closeDropdowns();buildSortMenu();page=1;apply()}
-function toggleSort(){
-  var m=document.getElementById('sortMenu'),e=document.getElementById('expMenu'),ov=document.getElementById('dropOv');
-  e.classList.remove('on');
-  m.classList.toggle('on');
-  ov.classList.toggle('on',m.classList.contains('on'));
-}
-function toggleExport(){
-  var m=document.getElementById('sortMenu'),e=document.getElementById('expMenu'),ov=document.getElementById('dropOv');
-  m.classList.remove('on');
-  e.classList.toggle('on');
-  ov.classList.toggle('on',e.classList.contains('on'));
-}
-function closeDropdowns(){
-  document.getElementById('sortMenu').classList.remove('on');
-  document.getElementById('expMenu').classList.remove('on');
-  document.getElementById('dropOv').classList.remove('on');
-}
-document.addEventListener('click',function(e){if(!e.target.closest('.sdrop')&&!e.target.closest('.exp-drop')&&!e.target.closest('.smenu')&&!e.target.closest('.exp-menu'))closeDropdowns()});
+function setSort(k,d){sort={k:k,d:d};document.getElementById('sortMenu').classList.remove('on');buildSortMenu();page=1;apply()}
+function toggleSort(){document.getElementById('expMenu').classList.remove('on');document.getElementById('sortMenu').classList.toggle('on')}
+function toggleExport(){document.getElementById('sortMenu').classList.remove('on');document.getElementById('expMenu').classList.toggle('on')}
+document.addEventListener('click',function(e){if(!e.target.closest('.sdrop')&&!e.target.closest('.smenu'))document.getElementById('sortMenu').classList.remove('on');if(!e.target.closest('.exp-drop')&&!e.target.closest('.exp-menu'))document.getElementById('expMenu').classList.remove('on')});
 
 function render(){if(view==='grid')renderGrid();else renderList();renderPag()}
 
@@ -723,7 +695,7 @@ function toggleMF(){document.getElementById('sidebar').classList.toggle('open');
 
 // ── EXPORT CSV ──
 function doExportCSV(){
-  if(!FLT.length)return;closeDropdowns();
+  if(!FLT.length)return;document.getElementById('expMenu').classList.remove('on');
   var hdr='Name,Adresse,Stadt,Kreis,Kategorie,Küche,Rating,Bewertungen,Telefon,Website,Google Maps';
   var lines=[hdr];
   FLT.forEach(function(p){
@@ -740,7 +712,7 @@ function doExportCSV(){
 
 // ── EXPORT PDF ──
 function doExportPDF(){
-  if(!FLT.length)return;closeDropdowns();
+  if(!FLT.length)return;document.getElementById('expMenu').classList.remove('on');
   if(!_pdfReady||typeof window.jspdf==='undefined'){
     alert('PDF-Bibliothek wird noch geladen… Bitte in wenigen Sekunden erneut versuchen.');
     var s1=document.createElement('script');s1.src='https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
