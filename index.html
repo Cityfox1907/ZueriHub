@@ -269,7 +269,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem"><span style="font-weight:700;font-size:.9rem">Filter</span><button class="chip-clear" onclick="clearAll()">Zurücksetzen</button></div>
       <div class="fs"><div class="fl">Betriebsart</div><div class="tg" id="fTrade"></div></div>
       <div class="fs" id="fCuisine"><div class="fl">Küche & Stil</div></div>
-      <div class="fs"><div class="fl">Standort</div><div class="tg" style="gap:.35rem"><button id="btnStadtZh" class="tb" onclick="toggleStadtZh()" style="flex:1;justify-content:center;font-weight:600">🏙️ Stadt Zürich</button><button id="btnWinti" class="tb" onclick="toggleWinti()" style="flex:1;justify-content:center;font-weight:600">🏙️ Winterthur</button></div><div style="font-size:.68rem;color:var(--text3);margin-top:.35rem">Kein Filter = gesamter Kanton Zürich</div></div>
+      <div class="fs"><div class="fl">Standort</div><div class="tg" style="gap:.35rem"><button id="btnStadtZh" class="tb" onclick="toggleStadtZh()" style="flex:1;justify-content:center;font-weight:600">🏙️ Stadt Zürich</button><button id="btnWinti" class="tb" onclick="toggleWinti()" style="flex:1;justify-content:center;font-weight:600">🏙️ Winterthur</button></div></div>
       <div class="fs" id="fGeo"><div class="fl">Umkreis-Suche</div><div id="geoStatus"></div><div class="geo-input"><input type="text" id="geoPlz" placeholder="PLZ" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div><div class="geo-hint">Postleitzahl eingeben, dann Radius wählen</div><div class="tg" id="geoRadius"></div></div>
       <div class="fs"><div class="fl">Bewertung</div><div class="rng"><label>Mindestbewertung <b id="ratingVal">1.0</b></label><input type="range" min="1" max="5" step="0.1" value="1" id="ratingSlider" oninput="onRating(this.value)"></div><div class="rng" style="margin-top:.5rem"><label>Min. Bewertungen <b id="revVal">40</b></label><input type="range" min="0" max="100" value="0" id="revSlider" oninput="onRevCount(this.value)"></div><div class="rpre" id="revPresets"></div></div>
       <div class="fs"><div class="fl">Typ (Detail)</div><div class="tg" id="fTypes" style="max-height:170px;overflow-y:auto"></div></div>
@@ -750,7 +750,31 @@ function doExportPDF(){
       didDrawPage:function(){doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text('ZüriHub – Seite '+doc.internal.getCurrentPageInfo().pageNumber,W/2,H-6,{align:'center'})}
     });
     if(max<FLT.length){var y=(doc.lastAutoTable?doc.lastAutoTable.finalY:26)+8;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Hinweis: Export auf '+fmt(max)+' von '+fmt(FLT.length)+' Eintraegen limitiert.',14,y)}
-    doc.save('ZüriHub-Export-'+FLT.length+'.pdf');
+    // Mobile-compatible PDF download
+    var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isIOS){
+      // iOS Safari blocks blob downloads — open as data URI in new tab
+      var dataUri=doc.output('datauristring');
+      var win=window.open(dataUri,'_blank');
+      if(!win){
+        // Popup blocked fallback: use blob + object URL in same window
+        var blob=doc.output('blob');
+        var blobUrl=URL.createObjectURL(blob);
+        window.location.href=blobUrl;
+      }
+    }else if(isMobile){
+      // Android: blob URL approach works
+      var blob=doc.output('blob');
+      var blobUrl=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=blobUrl;a.download='ZüriHub-Export-'+FLT.length+'.pdf';
+      a.style.display='none';document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(blobUrl)},500);
+    }else{
+      doc.save('ZüriHub-Export-'+FLT.length+'.pdf');
+    }
   }catch(err){console.error('PDF Error:',err);alert('PDF-Export fehlgeschlagen: '+err.message)}
 }
 
