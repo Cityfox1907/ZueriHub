@@ -30,8 +30,8 @@ function _ls(u){return new Promise(function(ok,no){var s=document.createElement(
   --shadow-md:0 4px 14px rgba(13,27,42,.08);--shadow-lg:0 12px 36px rgba(13,27,42,.12);
   --font:'Outfit',system-ui,sans-serif;--font-display:'Fraunces',Georgia,serif;
 }
-html{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-body{min-height:100vh}
+html{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{min-height:100vh;overflow-x:hidden}
 input,select,button,textarea{font-family:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none}
 a{color:inherit;text-decoration:none}
@@ -92,7 +92,7 @@ a{color:inherit;text-decoration:none}
 .chip-clear:hover{background:var(--accent-light)}
 
 /* LAYOUT */
-.layout{max-width:1480px;margin:0 auto;display:flex;position:relative}
+.layout{max-width:1480px;margin:0 auto;display:flex;position:relative;overflow-x:hidden}
 .fov{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:149;display:none}.fov.on{display:block}
 
 /* SIDEBAR */
@@ -121,13 +121,13 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .rpre{display:flex;flex-wrap:wrap;gap:.22rem;margin-top:.3rem}
 
 /* CONTENT */
-.content{flex:1;padding:.75rem 1.25rem;min-width:0}
+.content{flex:1;padding:.75rem 1.25rem;min-width:0;overflow-x:hidden}
 
 /* GRID */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;overflow:hidden}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.grid{grid-template-columns:1fr}}
-.card{background:#fff;border:1.5px solid var(--border-light);border-radius:var(--radius);padding:.85rem 1rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:158px}
+.card{background:#fff;border:1.5px solid var(--border-light);border-radius:var(--radius);padding:.85rem 1rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:158px;min-width:0;overflow:hidden}
 .card:hover{box-shadow:var(--shadow-md);border-color:rgba(15,71,175,.3);transform:translateY(-1px)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.35rem;margin-bottom:.35rem}
 .card-name{font-weight:600;font-size:.9rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
