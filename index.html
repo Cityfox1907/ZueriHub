@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <title>ZüriHub – Gastronomie-Datenbank Kanton Zürich</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
@@ -30,8 +33,8 @@ function _ls(u){return new Promise(function(ok,no){var s=document.createElement(
   --shadow-md:0 4px 14px rgba(13,27,42,.08);--shadow-lg:0 12px 36px rgba(13,27,42,.12);
   --font:'Outfit',system-ui,sans-serif;--font-display:'Fraunces',Georgia,serif;
 }
-html{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;touch-action:pan-x pan-y}
-body{min-height:100vh;min-height:100dvh;overflow-x:hidden}
+html{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{min-height:100vh;overflow-x:hidden}
 input,select,button,textarea{font-family:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none}
 a{color:inherit;text-decoration:none}
@@ -82,7 +85,7 @@ a{color:inherit;text-decoration:none}
 .vtog button:not(:last-child){border-right:1.5px solid var(--border)}
 
 /* STATS */
-.stats{padding:.45rem 0;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.82rem;color:var(--text2)}
+.stats{max-width:1480px;margin:0 auto;padding:.45rem 1.25rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.82rem;color:var(--text2)}
 .rcnt b{color:var(--primary);font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .chip{display:inline-flex;align-items:center;gap:.15rem;padding:.18rem .45rem;background:var(--primary-light);color:var(--primary-dark);border-radius:20px;font-size:.74rem;font-weight:500;white-space:nowrap}
@@ -96,7 +99,7 @@ a{color:inherit;text-decoration:none}
 .fov{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:149;display:none}.fov.on{display:block}
 
 /* SIDEBAR */
-.sidebar{width:280px;min-width:280px;border-right:1px solid var(--border-light);background:#fff;padding:.75rem 1rem;overflow-y:auto;align-self:flex-start;position:sticky;top:52px;max-height:calc(100vh - 52px);transition:transform .3s}
+.sidebar{width:280px;min-width:280px;border-right:1px solid var(--border-light);background:#fff;padding:.75rem 1rem;overflow-y:auto;max-height:calc(100vh - 102px);position:sticky;top:102px;transition:transform .3s}
 .fs{margin-bottom:.85rem;padding-bottom:.85rem;border-bottom:1px solid var(--border-light)}.fs:last-child{border-bottom:none}
 .fl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.45rem;display:flex;align-items:center;justify-content:space-between}
 .fl button{font-size:.68rem;color:var(--primary);font-weight:600}
@@ -124,9 +127,9 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .content{flex:1;padding:.75rem 1.25rem;min-width:0;overflow-x:hidden}
 
 /* GRID */
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:680px){.grid{grid-template-columns:minmax(0,1fr)}}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;overflow:hidden}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
 .card{background:#fff;border:1.5px solid var(--border-light);border-radius:var(--radius);padding:.85rem 1rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:158px;min-width:0;overflow:hidden}
 .card:hover{box-shadow:var(--shadow-md);border-color:rgba(15,71,175,.3);transform:translateY(-1px)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.35rem;margin-bottom:.35rem}
@@ -219,10 +222,10 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 /* MOBILE */
 .mfbtn{display:none!important}
 @media(max-width:900px){
-  .sidebar{position:fixed;left:0;top:0;height:100vh;height:100dvh;z-index:150;transform:translateX(-100%);box-shadow:var(--shadow-lg);padding-bottom:env(safe-area-inset-bottom,0)}.sidebar.open{transform:translateX(0)}.mfbtn{display:inline-flex!important}.content{padding:.6rem .75rem}
+  .sidebar{position:fixed;left:0;top:0;height:100vh;z-index:150;transform:translateX(-100%);box-shadow:var(--shadow-lg)}.sidebar.open{transform:translateX(0)}.mfbtn{display:inline-flex!important}.content{padding:.6rem .75rem}
 }
 @media(max-width:640px){
-  .header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;overflow-x:auto;flex-wrap:nowrap;gap:.25rem;scrollbar-width:none}.hactions::-webkit-scrollbar{display:none}.stats{padding:.35rem 0;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
+  .header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;overflow-x:auto;flex-wrap:nowrap;gap:.25rem;scrollbar-width:none}.hactions::-webkit-scrollbar{display:none}.stats{padding:.35rem .75rem;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
 }
 </style>
 </head>
@@ -261,6 +264,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
     </div>
   </div></header>
 
+  <div class="stats"><div class="rcnt" id="rcnt"></div><div class="chips" id="chips"></div></div>
+
   <div class="layout">
     <div class="fov" id="fov" onclick="toggleMF()"></div>
     <aside class="sidebar" id="sidebar">
@@ -273,7 +278,6 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       <div class="fs"><div class="fl">Typ (Detail)</div><div class="tg" id="fTypes" style="max-height:170px;overflow-y:auto"></div></div>
     </aside>
     <main class="content">
-      <div class="stats"><div class="rcnt" id="rcnt"></div><div class="chips" id="chips"></div></div>
       <div class="grid" id="grid"></div>
       <div class="lview" id="lview"><table class="ltbl"><thead id="lhead"></thead><tbody id="lbody"></tbody></table></div>
       <div class="empty" id="empty" style="display:none"><span class="ei">🔍</span><h3 style="font-size:1rem;margin-bottom:.3rem">Keine Ergebnisse</h3><p style="font-size:.85rem">Versuche andere Filter oder Suchbegriffe.</p></div>
@@ -356,6 +360,8 @@ function kreisTag(a){const k=getKreis(a);return k?'<span class="kreis">K'+k+'</s
 function xCity(a){if(!a)return'';const p=a.split(',');if(p.length<2)return a.trim();const l=p[p.length-1].trim(),t=l.split(/\s+/);return t.length>=2&&/^\d{4,5}$/.test(t[0])?t.slice(1).join(' '):l}
 function stars(r,sz){sz=sz||13;let h='',fu=Math.floor(r),ha=r-fu>=.25;for(let i=0;i<5;i++){if(i<fu)h+='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';else if(i===fu&&ha)h+='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24"><defs><linearGradient id="hg'+sz+'"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#D4DCE8"/></linearGradient></defs><path fill="url(#hg'+sz+')" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';else h+='<svg class="e" width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'}return h}
 function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function sanitizeUrl(u){if(!u||typeof u!=='string')return'';u=u.trim();if(/^https?:\/\//i.test(u))return u;return''}
+function sanitizeId(id){if(!id||typeof id!=='string')return'';return id.replace(/[^A-Za-z0-9_\-]/g,'')}
 function debounce(fn,ms){var t;return function(){var a=arguments;clearTimeout(t);t=setTimeout(function(){fn.apply(null,a)},ms)}}
 function fmt(n){return n.toLocaleString('de-CH')}
 function s2rv(v){v=+v;if(!v)return 40;return Math.round(40+Math.pow(v/100,2)*14653)}
@@ -402,6 +408,10 @@ async function processAndBoot(raw){
   var bar=document.getElementById('pbar'),msg=document.getElementById('splashMsg');
   try{
     var places=Array.isArray(raw)?raw:(raw.places||raw.results||[]);
+    // Validate & sanitize entries
+    places=places.filter(function(p){
+      return p&&typeof p==='object'&&typeof p.name==='string'&&p.name.length>0&&typeof(p.rating)==='number'&&p.rating>=0&&p.rating<=5;
+    });
     bar.style.width='60%';msg.textContent=fmt(places.length)+' Einträge werden verarbeitet…';
     await new Promise(function(r){setTimeout(r,30)});
     var SKIP=new Set(['point_of_interest','establishment','food','store','service','food_store']);
@@ -412,7 +422,7 @@ async function processAndBoot(raw){
       var trade=p.trade||'';
       if(types.indexOf('shopping_mall')>=0||types.indexOf('department_store')>=0)trade='Einkaufszentrum';
       var st=[p.name,p.address,trade].concat(types).concat(cuisines.map(function(c){return(CMAP[c]||{}).l||''})).join(' ').toLowerCase();
-      return{id:p.id||p.place_id||'',name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:p.gmapsUrl||'',web:p.website||'',ph:p.phone||'',pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:trade,types:types,cuisines:cuisines,city:city,searchText:st};
+      return{id:sanitizeId(p.id||p.place_id||''),name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:sanitizeUrl(p.gmapsUrl||''),web:sanitizeUrl(p.website||''),ph:(p.phone||'').replace(/[^\d\s+\-()]/g,''),pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:trade,types:types,cuisines:cuisines,city:city,searchText:st};
     });
     bar.style.width='75%';msg.textContent='Indizes werden aufgebaut…';
     await new Promise(function(r){setTimeout(r,20)});
@@ -747,14 +757,6 @@ function doExportPDF(){
     doc.save('ZüriHub-Export-'+FLT.length+'.pdf');
   }catch(err){console.error('PDF Error:',err);alert('PDF-Export fehlgeschlagen: '+err.message)}
 }
-
-// Prevent zoom on all devices
-document.addEventListener('gesturestart',function(e){e.preventDefault()},{passive:false});
-document.addEventListener('gesturechange',function(e){e.preventDefault()},{passive:false});
-document.addEventListener('gestureend',function(e){e.preventDefault()},{passive:false});
-document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
-document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},{passive:false});
-document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&(e.key==='+'||e.key==='-'||e.key==='='||e.key==='0'))e.preventDefault()});
 
 init();
 </script>
