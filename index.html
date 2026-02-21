@@ -131,6 +131,16 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .card-tags{display:flex;flex-wrap:wrap;gap:.22rem;margin-top:auto}
 .tag{padding:.1rem .4rem;border-radius:12px;font-size:.68rem;font-weight:500;background:var(--surface2);color:var(--text2);white-space:nowrap}
 .kreis{display:inline-flex;align-items:center;padding:.1rem .35rem;border-radius:6px;font-size:.62rem;font-weight:700;background:var(--primary);color:#fff;white-space:nowrap;letter-spacing:.03em;flex-shrink:0}
+.dist{display:inline-flex;align-items:center;gap:.15rem;padding:.1rem .38rem;border-radius:6px;font-size:.62rem;font-weight:700;background:var(--gold);color:#fff;white-space:nowrap;flex-shrink:0;letter-spacing:.01em}
+.dist svg{width:10px;height:10px}
+.geo-input{display:flex;gap:.3rem;margin-bottom:.4rem}
+.geo-input input{flex:1;padding:.38rem .55rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;text-align:center;outline:none;background:var(--bg);transition:border-color .15s;letter-spacing:.08em;font-weight:600}
+.geo-input input:focus{border-color:var(--primary);background:#fff}
+.geo-input input.err{border-color:var(--accent);background:var(--accent-light)}
+.geo-input input.ok{border-color:#0D8A4A;background:#ECFDF3}
+.geo-hint{font-size:.68rem;color:var(--text3);margin-bottom:.35rem}
+.geo-active{font-size:.72rem;color:var(--primary);font-weight:600;margin-bottom:.35rem;display:flex;align-items:center;gap:.25rem}
+.geo-active button{font-size:.68rem;color:var(--accent);font-weight:600;margin-left:auto}
 
 /* LIST VIEW */
 .lview{display:none;overflow-x:auto}
@@ -242,6 +252,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       <div class="fs"><div class="fl">Betriebsart</div><div class="tg" id="fTrade"></div></div>
       <div class="fs" id="fCuisine"><div class="fl">Küche & Stil</div></div>
       <div class="fs"><div class="fl">Standort <button onclick="clearCities()">Reset</button></div><div class="tg" id="cityQuick" style="margin-bottom:.35rem"></div><input type="text" class="cs-input" id="citySearch" placeholder="Gemeinde suchen…"><div class="clist" id="cityList"></div></div>
+      <div class="fs" id="fGeo"><div class="fl">Umkreis-Suche</div><div id="geoStatus"></div><div class="geo-input"><input type="text" id="geoPlz" placeholder="PLZ" maxlength="4" inputmode="numeric" pattern="[0-9]*"></div><div class="geo-hint">Postleitzahl eingeben, dann Radius wählen</div><div class="tg" id="geoRadius"></div></div>
       <div class="fs"><div class="fl">Bewertung</div><div class="rng"><label>Mindestbewertung <b id="ratingVal">1.0</b></label><input type="range" min="1" max="5" step="0.1" value="1" id="ratingSlider" oninput="onRating(this.value)"></div><div class="rng" style="margin-top:.5rem"><label>Min. Bewertungen <b id="revVal">40</b></label><input type="range" min="0" max="100" value="0" id="revSlider" oninput="onRevCount(this.value)"></div><div class="rpre" id="revPresets"></div></div>
       <div class="fs"><div class="fl">Typ (Detail)</div><div class="tg" id="fTypes" style="max-height:170px;overflow-y:auto"></div></div>
     </aside>
@@ -303,6 +314,25 @@ const CAT_ORDER=['diet','meat','dish','origin','drinks','sweet','service'];
 const TRADE_I={'Restaurant':'🍽️','Bar':'🍺','Café':'☕','Hotel':'🏨','Bäckerei':'🥐','Takeaway':'🥡'};
 const TDISP={night_club:'Nachtclub',cocktail_bar:'Cocktailbar',lounge_bar:'Lounge',hookah_bar:'Shisha',pub:'Pub',wine_bar:'Weinbar',bar_and_grill:'Bar & Grill',ice_cream_shop:'Eisdiele',coffee_shop:'Coffee Shop',bakery:'Bäckerei',confectionery:'Konditorei',pastry_shop:'Patisserie',dessert_shop:'Desserts',sandwich_shop:'Sandwich',snack_bar:'Snack Bar',meal_takeaway:'Takeaway',meal_delivery:'Lieferdienst',food_delivery:'Lieferung',catering_service:'Catering',pizza_delivery:'Pizza-Lief.',live_music_venue:'Live Musik',inn:'Gasthof',bed_and_breakfast:'B&B',beer_garden:'Biergarten',sports_bar:'Sports Bar',brewery:'Brauerei',brunch_restaurant:'Brunch'};
 const KREIS={8001:1,8002:2,8003:3,8004:4,8005:5,8006:6,8008:8,8032:7,8037:10,8038:2,8040:4,8041:7,8044:7,8045:3,8046:6,8047:5,8048:4,8049:10,8050:11,8051:11,8052:12,8053:7,8055:3,8057:6,8058:12,8060:11,8064:9,8092:1};
+
+// PLZ→[lat,lng] built from dataset
+var PLZ_GEO={};
+function buildPlzGeo(){
+  var acc={};
+  ALL.forEach(function(p){
+    if(!p.lat||!p.lng)return;
+    var m=(p.addr||'').match(/\b(\d{4})\b/);if(!m)return;var plz=m[1];
+    if(!acc[plz])acc[plz]={la:0,lo:0,n:0};
+    acc[plz].la+=p.lat;acc[plz].lo+=p.lng;acc[plz].n++;
+  });
+  Object.keys(acc).forEach(function(k){var a=acc[k];PLZ_GEO[k]=[Math.round(a.la/a.n*100000)/100000,Math.round(a.lo/a.n*100000)/100000]});
+}
+function haversine(lat1,lon1,lat2,lon2){
+  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+var geoOrigin=null,geoRadius=0; // {lat,lng,plz} and km
 
 function getKreis(a){if(!a)return 0;const m=a.match(/\b(80\d{2})\b/);return m?KREIS[+m[1]]||0:0}
 function kreisTag(a){const k=getKreis(a);return k?'<span class="kreis">K'+k+'</span>':''}
@@ -375,7 +405,7 @@ async function processAndBoot(raw){
     });
     bar.style.width='90%';msg.textContent='Interface wird aufgebaut…';
     await new Promise(function(r){setTimeout(r,20)});
-    buildUI();FLT=ALL.slice();sortFLT();render();updCount();updChips();
+    buildPlzGeo();buildUI();FLT=ALL.slice();sortFLT();render();updCount();updChips();
     bar.style.width='100%';
     await new Promise(function(r){setTimeout(r,250)});
     document.getElementById('splash').classList.add('done');document.getElementById('app').style.display='';
@@ -408,6 +438,13 @@ function buildUI(){
   [50,100,200,500,1000].forEach(function(v){var b=mk('button','tb');b.textContent=v+'+';b.onclick=function(){var sl=document.getElementById('revSlider');sl.value=rv2s(v);onRevCount(sl.value)};rp.appendChild(b)});
   var tf=document.getElementById('fTypes');
   Object.entries(idxType).sort(function(a,b){return b[1]-a[1]}).forEach(function(e){var b=mk('button','tb');b.dataset.k='ty';b.dataset.v=e[0];b.innerHTML=(TDISP[e[0]]||e[0])+'<span class="n">'+e[1]+'</span>';b.onclick=function(){togF('ty',e[0],b)};tf.appendChild(b)});
+  // Geo radius buttons
+  var gr=document.getElementById('geoRadius');
+  [1,2,3,5,7,10,15].forEach(function(km){
+    var b=mk('button','tb');b.dataset.km=km;b.textContent=km+' km';
+    b.onclick=function(){setGeoRadius(km)};gr.appendChild(b);
+  });
+  document.getElementById('geoPlz').oninput=function(){onGeoPlz(this.value)};
   buildSortMenu();
   document.getElementById('si').oninput=debounce(function(){fl.s=document.getElementById('si').value.toLowerCase().trim();page=1;apply()},300);
 }
@@ -439,8 +476,53 @@ function clearAll(){
   document.getElementById('ratingSlider').value=1;document.getElementById('ratingVal').textContent='1.0';
   document.getElementById('revSlider').value=0;document.getElementById('revVal').textContent='40';
   document.querySelectorAll('.tb.on').forEach(function(b){b.classList.remove('on')});
+  clearGeo();
   renderCL(Object.entries(idxCity).sort(function(a,b){return b[1]-a[1]}));
   page=1;apply();
+}
+// ── GEO FILTER ──
+function onGeoPlz(val){
+  var inp=document.getElementById('geoPlz');
+  val=val.replace(/\D/g,'');inp.value=val;
+  inp.classList.remove('ok','err');
+  if(val.length===4){
+    if(PLZ_GEO[val]){
+      inp.classList.add('ok');
+      geoOrigin={lat:PLZ_GEO[val][0],lng:PLZ_GEO[val][1],plz:val};
+      if(geoRadius>0){page=1;apply()}
+      updGeoStatus();
+    }else{inp.classList.add('err');geoOrigin=null;if(geoRadius>0){page=1;apply()}updGeoStatus()}
+  }else{geoOrigin=null;if(geoRadius>0){page=1;apply()}updGeoStatus()}
+}
+function setGeoRadius(km){
+  document.querySelectorAll('#geoRadius .tb').forEach(function(b){b.classList.toggle('on',+b.dataset.km===km)});
+  geoRadius=(geoRadius===km)?0:km;
+  if(geoRadius===0){document.querySelectorAll('#geoRadius .tb').forEach(function(b){b.classList.remove('on')});if(sort.k==='distance')sort={k:'reviewCount',d:'desc'}}
+  else if(geoOrigin){sort={k:'distance',d:'asc'}}
+  buildSortMenu();
+  page=1;apply();updGeoStatus();
+}
+function clearGeo(){
+  geoOrigin=null;geoRadius=0;
+  document.getElementById('geoPlz').value='';
+  document.getElementById('geoPlz').classList.remove('ok','err');
+  document.querySelectorAll('#geoRadius .tb').forEach(function(b){b.classList.remove('on')});
+  updGeoStatus();page=1;apply();
+}
+function updGeoStatus(){
+  var el=document.getElementById('geoStatus');
+  if(geoOrigin&&geoRadius>0){
+    el.innerHTML='<div class="geo-active">📍 PLZ '+geoOrigin.plz+' · '+geoRadius+' km<button onclick="clearGeo()">✕ Reset</button></div>';
+  }else{el.innerHTML=''}
+}
+function getDist(p){
+  if(!geoOrigin||!p.lat||!p.lng)return -1;
+  return haversine(geoOrigin.lat,geoOrigin.lng,p.lat,p.lng);
+}
+function distTag(p){
+  var d=p._dist;if(d==null||d<0)return'';
+  var txt=d<1?(Math.round(d*1000)+'m'):d.toFixed(1)+' km';
+  return '<span class="dist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+txt+'</span>';
 }
 function apply(){
   FLT=ALL.filter(function(p){
@@ -453,11 +535,16 @@ function apply(){
     if(fl.ty.size&&!p.types.some(function(t){return fl.ty.has(t)}))return false;
     return true;
   });
+  // compute distances & filter by radius
+  var hasGeo=geoOrigin&&geoRadius>0;
+  FLT.forEach(function(p){p._dist=geoOrigin?getDist(p):-1});
+  if(hasGeo){FLT=FLT.filter(function(p){return p._dist>=0&&p._dist<=geoRadius})}
   sortFLT();render();updChips();updCount();
 }
 function sortFLT(){
   var k=sort.k,m=sort.d==='asc'?1:-1;
   FLT.sort(function(a,b){
+    if(k==='distance'){var da=a._dist>=0?a._dist:99999,db=b._dist>=0?b._dist:99999;return(da-db)*m}
     if(k==='rating')return(a.r-b.r)*m;
     if(k==='reviewCount')return(a.rv-b.rv)*m;
     if(k==='name'){var x=a.name.toLowerCase(),y=b.name.toLowerCase();return x<y?-m:x>y?m:0}
@@ -466,6 +553,7 @@ function sortFLT(){
 }
 function buildSortMenu(){
   var opts=[{k:'reviewCount',d:'desc',l:'Meiste Bewertungen'},{k:'reviewCount',d:'asc',l:'Wenigste Bewertungen'},{k:'rating',d:'desc',l:'Beste Bewertung'},{k:'rating',d:'asc',l:'Schlechteste Bewertung'},{k:'name',d:'asc',l:'Name A → Z'},{k:'name',d:'desc',l:'Name Z → A'}];
+  if(geoOrigin&&geoRadius>0)opts.unshift({k:'distance',d:'asc',l:'📍 Nächste zuerst'},{k:'distance',d:'desc',l:'📍 Weiteste zuerst'});
   document.getElementById('sortMenu').innerHTML=opts.map(function(o){return '<button class="sopt '+(o.k===sort.k&&o.d===sort.d?'on':'')+'" onclick="setSort(\''+o.k+"','"+o.d+"')\">"+o.l+'</button>'}).join('');
 }
 function setSort(k,d){sort={k:k,d:d};document.getElementById('sortMenu').classList.remove('on');buildSortMenu();page=1;apply()}
@@ -483,7 +571,8 @@ function renderGrid(){
   g.innerHTML=slice.map(function(p,i){
     var cu=p.cuisines.slice(0,2).map(function(c){return '<span class="tag">'+CMAP[c].i+' '+CMAP[c].l+'</span>'}).join('');
     var kr=kreisTag(p.addr);
-    return '<div class="card fade-up" style="animation-delay:'+Math.min(i*20,200)+'ms" onclick="openModal(\''+p.id+'\')"><div class="card-top"><div class="card-name">'+esc(p.name)+'</div>'+(p.trade?'<div class="card-trade">'+(TRADE_I[p.trade]||'')+' '+p.trade+'</div>':'')+'</div><div class="card-rating"><div class="stars">'+stars(p.r)+'</div><span class="card-score">'+p.r.toFixed(1)+'</span><span class="card-reviews">('+fmt(p.rv)+')</span></div><div class="card-addr"><span class="card-addr-text">'+esc(p.addr)+'</span>'+kr+'</div><div class="card-tags">'+cu+'</div></div>';
+    var dt=distTag(p);
+    return '<div class="card fade-up" style="animation-delay:'+Math.min(i*20,200)+'ms" onclick="openModal(\''+p.id+'\')"><div class="card-top"><div class="card-name">'+esc(p.name)+'</div>'+(p.trade?'<div class="card-trade">'+(TRADE_I[p.trade]||'')+' '+p.trade+'</div>':'')+'</div><div class="card-rating"><div class="stars">'+stars(p.r)+'</div><span class="card-score">'+p.r.toFixed(1)+'</span><span class="card-reviews">('+fmt(p.rv)+')</span></div><div class="card-addr"><span class="card-addr-text">'+esc(p.addr)+'</span>'+kr+dt+'</div><div class="card-tags">'+cu+'</div></div>';
   }).join('');
 }
 
@@ -491,7 +580,10 @@ function renderList(){
   var g=document.getElementById('grid'),l=document.getElementById('lview'),em=document.getElementById('empty');
   g.style.display='none';l.style.display='block';
   if(!FLT.length){l.style.display='none';em.style.display='';return}em.style.display='none';
-  var cols=[{k:'name',l:'Name'},{k:null,l:'Stadt'},{k:null,l:'Kategorie'},{k:'rating',l:'Bewertung'},{k:'reviewCount',l:'Anzahl'},{k:null,l:''}];
+  var hasGeo=geoOrigin&&geoRadius>0;
+  var cols=[{k:'name',l:'Name'},{k:null,l:'Stadt'},{k:null,l:'Kategorie'},{k:'rating',l:'Bewertung'},{k:'reviewCount',l:'Anzahl'}];
+  if(hasGeo)cols.push({k:'distance',l:'Entfernung'});
+  cols.push({k:null,l:''});
   var headHTML='<tr>';
   cols.forEach(function(c){
     var sd=c.k&&c.k===sort.k;var ar=sd?(sort.d==='asc'?'↑':'↓'):'↕';
@@ -504,7 +596,9 @@ function renderList(){
     var link=p.gmaps||('https://www.google.com/maps/place/?q=place_id:'+p.id);
     var kr=getKreis(p.addr);
     var cityD=kr?esc(p.city)+' <span class="kreis">K'+kr+'</span>':esc(p.city);
-    return '<tr><td class="nc" onclick="openModal(\''+p.id+'\')">'+esc(p.name)+'</td><td class="ac">'+cityD+'</td><td><span class="tag" style="font-size:.7rem">'+(TRADE_I[p.trade]||'')+' '+(p.trade||'–')+'</span></td><td><span class="stars" style="display:inline-flex;vertical-align:middle">'+stars(p.r,11)+'</span> '+p.r.toFixed(1)+'</td><td>'+fmt(p.rv)+'</td><td class="link-cell"><a href="'+link+'" target="_blank" rel="noopener">Maps ↗</a></td></tr>';
+    var distCell='';
+    if(hasGeo){var d=p._dist;distCell='<td>'+((d!=null&&d>=0)?(d<1?Math.round(d*1000)+' m':d.toFixed(1)+' km'):'–')+'</td>'}
+    return '<tr><td class="nc" onclick="openModal(\''+p.id+'\')">'+esc(p.name)+'</td><td class="ac">'+cityD+'</td><td><span class="tag" style="font-size:.7rem">'+(TRADE_I[p.trade]||'')+' '+(p.trade||'–')+'</span></td><td><span class="stars" style="display:inline-flex;vertical-align:middle">'+stars(p.r,11)+'</span> '+p.r.toFixed(1)+'</td><td>'+fmt(p.rv)+'</td>'+distCell+'<td class="link-cell"><a href="'+link+'" target="_blank" rel="noopener">Maps ↗</a></td></tr>';
   }).join('');
 }
 
@@ -544,6 +638,7 @@ function updChips(){
   fl.ci.forEach(function(c){addChip('📍 '+c,function(){togCity(c)})});
   if(fl.mr>1)addChip('≥'+fl.mr.toFixed(1)+'★',function(){fl.mr=1;document.getElementById('ratingSlider').value=1;document.getElementById('ratingVal').textContent='1.0'});
   if(fl.mv>40)addChip('≥'+fl.mv+' Bew.',function(){fl.mv=40;document.getElementById('revSlider').value=0;document.getElementById('revVal').textContent='40'});
+  if(geoOrigin&&geoRadius>0)addChip('📍 '+geoOrigin.plz+' · '+geoRadius+' km',function(){clearGeo()});
   fl.ty.forEach(function(t){addChip(TDISP[t]||t,function(){togF('ty',t,document.querySelector('[data-k="ty"][data-v="'+t+'"]'))})});
   if(count>1){var clr=document.createElement('button');clr.className='chip-clear';clr.textContent='Alle ✕';clr.addEventListener('click',function(){clearAll()});el.appendChild(clr)}
 }
@@ -557,7 +652,8 @@ function openModal(id){
   var dtypes=p.types.filter(function(t){return !!TDISP[t]}).map(function(t){return '<span class="tag" style="font-size:.72rem">'+TDISP[t]+'</span>'}).join('');
   var trade=p.trade?'<span class="tag" style="font-size:.72rem;background:var(--primary-light);color:var(--primary)">'+(TRADE_I[p.trade]||'')+' '+p.trade+'</span>':'';
   var kr=kreisTag(p.addr);
-  bd.innerHTML='<div class="m-name">'+esc(p.name)+'</div><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem"><div class="stars" style="color:var(--gold)">'+stars(p.r,17)+'</div><span style="font-weight:700;font-size:1.05rem">'+p.r.toFixed(1)+'</span><span style="color:var(--text3);font-size:.88rem">('+fmt(p.rv)+' Bewertungen)</span></div><div class="m-sec"><h4>Details</h4><div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(p.addr||'–')+' '+kr+'</div>'+(p.ph?'<div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><a href="tel:'+p.ph+'" style="color:var(--primary);font-weight:500">'+esc(p.ph)+'</a></div>':'')+(p.web?'<div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><a href="'+p.web+'" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500;word-break:break-all">'+p.web.replace(/^https?:\/\/(www\.)?/,'').substring(0,45)+'</a></div>':'')+'</div><div class="m-sec"><h4>Kategorien</h4><div class="tg" style="gap:.25rem">'+trade+cuisines+dtypes+'</div></div><div class="m-cta">'+(link?'<a href="'+link+'" target="_blank" rel="noopener" class="btn-p">📍 Auf Google Maps</a>':'')+(p.web?'<a href="'+p.web+'" target="_blank" rel="noopener" class="btn-s">🌐 Website besuchen</a>':'')+'</div>';
+  var mdist='';if(geoOrigin&&p._dist>=0){var d=p._dist;mdist='<div class="m-row" style="color:var(--gold);font-weight:600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+(d<1?Math.round(d*1000)+' m':d.toFixed(1)+' km')+' von PLZ '+geoOrigin.plz+'</div>'}
+  bd.innerHTML='<div class="m-name">'+esc(p.name)+'</div><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem"><div class="stars" style="color:var(--gold)">'+stars(p.r,17)+'</div><span style="font-weight:700;font-size:1.05rem">'+p.r.toFixed(1)+'</span><span style="color:var(--text3);font-size:.88rem">('+fmt(p.rv)+' Bewertungen)</span></div><div class="m-sec"><h4>Details</h4><div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(p.addr||'–')+' '+kr+'</div>'+mdist+(p.ph?'<div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><a href="tel:'+p.ph+'" style="color:var(--primary);font-weight:500">'+esc(p.ph)+'</a></div>':'')+(p.web?'<div class="m-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><a href="'+p.web+'" target="_blank" rel="noopener" style="color:var(--primary);font-weight:500;word-break:break-all">'+p.web.replace(/^https?:\/\/(www\.)?/,'').substring(0,45)+'</a></div>':'')+'</div><div class="m-sec"><h4>Kategorien</h4><div class="tg" style="gap:.25rem">'+trade+cuisines+dtypes+'</div></div><div class="m-cta">'+(link?'<a href="'+link+'" target="_blank" rel="noopener" class="btn-p">📍 Auf Google Maps</a>':'')+(p.web?'<a href="'+p.web+'" target="_blank" rel="noopener" class="btn-s">🌐 Website besuchen</a>':'')+'</div>';
   document.getElementById('modal').classList.add('on');document.body.style.overflow='hidden';
 }
 function closeModal(){document.getElementById('modal').classList.remove('on');document.body.style.overflow=''}
