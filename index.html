@@ -6,8 +6,17 @@
 <title>ZüriHub – Gastronomie-Datenbank Kanton Zürich</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+var _pdfReady=false;
+function _ls(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+(async function(){
+  var a=['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+  var b=['https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js','https://unpkg.com/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.min.js'];
+  for(var i=0;i<a.length;i++){try{await _ls(a[i]);break}catch(e){}}
+  for(var j=0;j<b.length;j++){try{await _ls(b[j]);break}catch(e){}}
+  if(window.jspdf)_pdfReady=true;
+})();
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -129,6 +138,15 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .card-addr{font-size:.77rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.35rem;display:flex;align-items:center;gap:.3rem}
 .card-addr-text{overflow:hidden;text-overflow:ellipsis}
 .card-tags{display:flex;flex-wrap:wrap;gap:.22rem;margin-top:auto}
+.card-icon{width:46px;height:46px;min-width:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0}
+.ci-restaurant{background:linear-gradient(135deg,#FFF5F5,#FED7D7)}
+.ci-bar{background:linear-gradient(135deg,#FFFFF0,#FEFCBF)}
+.ci-café{background:linear-gradient(135deg,#FFF8F1,#FEEBC8)}
+.ci-hotel{background:linear-gradient(135deg,#EBF8FF,#BEE3F8)}
+.ci-bäckerei{background:linear-gradient(135deg,#FFFAF0,#FEEBC8)}
+.ci-takeaway{background:linear-gradient(135deg,#F0FFF4,#C6F6D5)}
+.ci-einkaufszentrum{background:linear-gradient(135deg,#F5F3FF,#E9D8FD)}
+.ci-default{background:linear-gradient(135deg,#F7FAFC,#E2E8F0)}
 .tag{padding:.1rem .4rem;border-radius:12px;font-size:.68rem;font-weight:500;background:var(--surface2);color:var(--text2);white-space:nowrap}
 .kreis{display:inline-flex;align-items:center;padding:.1rem .35rem;border-radius:6px;font-size:.62rem;font-weight:700;background:var(--primary);color:#fff;white-space:nowrap;letter-spacing:.03em;flex-shrink:0}
 .dist{display:inline-flex;align-items:center;gap:.15rem;padding:.1rem .38rem;border-radius:6px;font-size:.62rem;font-weight:700;background:var(--gold);color:#fff;white-space:nowrap;flex-shrink:0;letter-spacing:.01em}
@@ -311,7 +329,7 @@ const CMAP={
 };
 const CAT_LABELS={diet:'Ernährungsweise',meat:'Fleisch & Grill',dish:'Gerichte & Stil',origin:'Herkunft / Küche',drinks:'Getränke & Nightlife',sweet:'Süsses & Gebäck',service:'Service & Typ'};
 const CAT_ORDER=['diet','meat','dish','origin','drinks','sweet','service'];
-const TRADE_I={'Restaurant':'🍽️','Bar':'🍺','Café':'☕','Hotel':'🏨','Bäckerei':'🥐','Takeaway':'🥡'};
+const TRADE_I={'Restaurant':'🍽️','Bar':'🍺','Café':'☕','Hotel':'🏨','Bäckerei':'🥐','Takeaway':'🥡','Einkaufszentrum':'🏬'};
 const TDISP={night_club:'Nachtclub',cocktail_bar:'Cocktailbar',lounge_bar:'Lounge',hookah_bar:'Shisha',pub:'Pub',wine_bar:'Weinbar',bar_and_grill:'Bar & Grill',ice_cream_shop:'Eisdiele',coffee_shop:'Coffee Shop',bakery:'Bäckerei',confectionery:'Konditorei',pastry_shop:'Patisserie',dessert_shop:'Desserts',sandwich_shop:'Sandwich',snack_bar:'Snack Bar',meal_takeaway:'Takeaway',meal_delivery:'Lieferdienst',food_delivery:'Lieferung',catering_service:'Catering',pizza_delivery:'Pizza-Lief.',live_music_venue:'Live Musik',inn:'Gasthof',bed_and_breakfast:'B&B',beer_garden:'Biergarten',sports_bar:'Sports Bar',brewery:'Brauerei',brunch_restaurant:'Brunch'};
 const KREIS={8001:1,8002:2,8003:3,8004:4,8005:5,8006:6,8008:8,8032:7,8037:10,8038:2,8040:4,8041:7,8044:7,8045:3,8046:6,8047:5,8048:4,8049:10,8050:11,8051:11,8052:12,8053:7,8055:3,8057:6,8058:12,8060:11,8064:9,8092:1};
 
@@ -392,8 +410,10 @@ async function processAndBoot(raw){
       var city=xCity(p.address||p.formatted_address||p.vicinity||'');
       var types=(p.types||[]).filter(function(t){return !SKIP.has(t)});
       var cuisines=types.filter(function(t){return !!CMAP[t]});
-      var st=[p.name,p.address,p.trade].concat(types).concat(cuisines.map(function(c){return(CMAP[c]||{}).l||''})).join(' ').toLowerCase();
-      return{id:p.id||p.place_id||'',name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:p.gmapsUrl||'',web:p.website||'',ph:p.phone||'',pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:p.trade||'',types:types,cuisines:cuisines,city:city,searchText:st};
+      var trade=p.trade||'';
+      if(types.indexOf('shopping_mall')>=0||types.indexOf('department_store')>=0)trade='Einkaufszentrum';
+      var st=[p.name,p.address,trade].concat(types).concat(cuisines.map(function(c){return(CMAP[c]||{}).l||''})).join(' ').toLowerCase();
+      return{id:p.id||p.place_id||'',name:p.name||'',addr:p.address||p.formatted_address||p.vicinity||'',lat:p.lat||0,lng:p.lng||0,r:p.rating||0,rv:p.reviewCount||p.user_ratings_total||0,gmaps:p.gmapsUrl||'',web:p.website||'',ph:p.phone||'',pc:p.photoCount!=null?p.photoCount:(p.photos?p.photos.length:0),trade:trade,types:types,cuisines:cuisines,city:city,searchText:st};
     });
     bar.style.width='75%';msg.textContent='Indizes werden aufgebaut…';
     await new Promise(function(r){setTimeout(r,20)});
@@ -563,6 +583,14 @@ document.addEventListener('click',function(e){if(!e.target.closest('.sdrop'))doc
 
 function render(){if(view==='grid')renderGrid();else renderList();renderPag()}
 
+function cardIcon(p){
+  var t=(p.trade||'default').toLowerCase().replace(/\s+/g,'-');
+  var cls='ci-'+({'restaurant':1,'bar':1,'café':1,'hotel':1,'bäckerei':1,'takeaway':1,'einkaufszentrum':1}[t]?t:'default');
+  var icon=TRADE_I[p.trade]||'🍽️';
+  if(p.cuisines.length>0){var cm=CMAP[p.cuisines[0]];if(cm)icon=cm.i}
+  return '<div class="card-icon '+cls+'">'+icon+'</div>';
+}
+
 function renderGrid(){
   var g=document.getElementById('grid'),l=document.getElementById('lview'),em=document.getElementById('empty');
   g.style.display='grid';l.style.display='none';
@@ -572,7 +600,8 @@ function renderGrid(){
     var cu=p.cuisines.slice(0,2).map(function(c){return '<span class="tag">'+CMAP[c].i+' '+CMAP[c].l+'</span>'}).join('');
     var kr=kreisTag(p.addr);
     var dt=distTag(p);
-    return '<div class="card fade-up" style="animation-delay:'+Math.min(i*20,200)+'ms" onclick="openModal(\''+p.id+'\')"><div class="card-top"><div class="card-name">'+esc(p.name)+'</div>'+(p.trade?'<div class="card-trade">'+(TRADE_I[p.trade]||'')+' '+p.trade+'</div>':'')+'</div><div class="card-rating"><div class="stars">'+stars(p.r)+'</div><span class="card-score">'+p.r.toFixed(1)+'</span><span class="card-reviews">('+fmt(p.rv)+')</span></div><div class="card-addr"><span class="card-addr-text">'+esc(p.addr)+'</span>'+kr+dt+'</div><div class="card-tags">'+cu+'</div></div>';
+    var ico=cardIcon(p);
+    return '<div class="card fade-up" style="animation-delay:'+Math.min(i*20,200)+'ms" onclick="openModal(\''+p.id+'\')"><div class="card-top"><div style="flex:1;min-width:0"><div class="card-name">'+esc(p.name)+'</div>'+(p.trade?'<div class="card-trade">'+(TRADE_I[p.trade]||'')+' '+p.trade+'</div>':'')+'</div>'+ico+'</div><div class="card-rating"><div class="stars">'+stars(p.r)+'</div><span class="card-score">'+p.r.toFixed(1)+'</span><span class="card-reviews">('+fmt(p.rv)+')</span></div><div class="card-addr"><span class="card-addr-text">'+esc(p.addr)+'</span>'+kr+dt+'</div><div class="card-tags">'+cu+'</div></div>';
   }).join('');
 }
 
@@ -680,7 +709,11 @@ function doExportCSV(){
 // ── EXPORT PDF ──
 function doExportPDF(){
   if(!FLT.length)return;document.getElementById('expMenu').classList.remove('on');
-  if(typeof window.jspdf==='undefined'){alert('PDF-Bibliothek nicht geladen. Bitte Seite neu laden (Internetverbindung nötig).');return}
+  if(!_pdfReady||typeof window.jspdf==='undefined'){
+    alert('PDF-Bibliothek wird noch geladen… Bitte in wenigen Sekunden erneut versuchen.');
+    var s1=document.createElement('script');s1.src='https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s1.onload=function(){var s2=document.createElement('script');s2.src='https://unpkg.com/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.min.js';s2.onload=function(){if(window.jspdf)_pdfReady=true};document.head.appendChild(s2)};
+    document.head.appendChild(s1);return}
   try{
     var jsPDF=window.jspdf.jsPDF;
     var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
