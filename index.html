@@ -82,7 +82,7 @@ a{color:inherit;text-decoration:none}
 .vtog button:not(:last-child){border-right:1.5px solid var(--border)}
 
 /* STATS */
-.stats{max-width:1480px;margin:0 auto;padding:.45rem 1.25rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.82rem;color:var(--text2)}
+.stats{padding:.45rem 0;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.82rem;color:var(--text2)}
 .rcnt b{color:var(--primary);font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center}
 .chip{display:inline-flex;align-items:center;gap:.15rem;padding:.18rem .45rem;background:var(--primary-light);color:var(--primary-dark);border-radius:20px;font-size:.74rem;font-weight:500;white-space:nowrap}
@@ -96,7 +96,7 @@ a{color:inherit;text-decoration:none}
 .fov{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:149;display:none}.fov.on{display:block}
 
 /* SIDEBAR */
-.sidebar{width:280px;min-width:280px;border-right:1px solid var(--border-light);background:#fff;padding:.75rem 1rem;overflow-y:auto;max-height:calc(100vh - 102px);position:sticky;top:102px;transition:transform .3s}
+.sidebar{width:280px;min-width:280px;border-right:1px solid var(--border-light);background:#fff;padding:.75rem 1rem;overflow-y:auto;align-self:flex-start;position:sticky;top:52px;max-height:calc(100vh - 52px);transition:transform .3s}
 .fs{margin-bottom:.85rem;padding-bottom:.85rem;border-bottom:1px solid var(--border-light)}.fs:last-child{border-bottom:none}
 .fl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.45rem;display:flex;align-items:center;justify-content:space-between}
 .fl button{font-size:.68rem;color:var(--primary);font-weight:600}
@@ -124,9 +124,9 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .content{flex:1;padding:.75rem 1.25rem;min-width:0;overflow-x:hidden}
 
 /* GRID */
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;overflow:hidden}
-@media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:680px){.grid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.grid{grid-template-columns:minmax(0,1fr)}}
 .card{background:#fff;border:1.5px solid var(--border-light);border-radius:var(--radius);padding:.85rem 1rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:158px;min-width:0;overflow:hidden}
 .card:hover{box-shadow:var(--shadow-md);border-color:rgba(15,71,175,.3);transform:translateY(-1px)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.35rem;margin-bottom:.35rem}
@@ -222,7 +222,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
   .sidebar{position:fixed;left:0;top:0;height:100vh;height:100dvh;z-index:150;transform:translateX(-100%);box-shadow:var(--shadow-lg);padding-bottom:env(safe-area-inset-bottom,0)}.sidebar.open{transform:translateX(0)}.mfbtn{display:inline-flex!important}.content{padding:.6rem .75rem}
 }
 @media(max-width:640px){
-  .header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;overflow-x:auto;flex-wrap:nowrap;gap:.25rem;scrollbar-width:none}.hactions::-webkit-scrollbar{display:none}.stats{padding:.35rem .75rem;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
+  .header-inner{gap:.35rem}.search-box{max-width:100%;order:10;min-width:100%}.hactions{width:100%;order:11;overflow-x:auto;flex-wrap:nowrap;gap:.25rem;scrollbar-width:none}.hactions::-webkit-scrollbar{display:none}.stats{padding:.35rem 0;font-size:.77rem}.mp{width:100%}.grid{gap:.65rem}
 }
 </style>
 </head>
@@ -261,8 +261,6 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
     </div>
   </div></header>
 
-  <div class="stats"><div class="rcnt" id="rcnt"></div><div class="chips" id="chips"></div></div>
-
   <div class="layout">
     <div class="fov" id="fov" onclick="toggleMF()"></div>
     <aside class="sidebar" id="sidebar">
@@ -275,6 +273,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
       <div class="fs"><div class="fl">Typ (Detail)</div><div class="tg" id="fTypes" style="max-height:170px;overflow-y:auto"></div></div>
     </aside>
     <main class="content">
+      <div class="stats"><div class="rcnt" id="rcnt"></div><div class="chips" id="chips"></div></div>
       <div class="grid" id="grid"></div>
       <div class="lview" id="lview"><table class="ltbl"><thead id="lhead"></thead><tbody id="lbody"></tbody></table></div>
       <div class="empty" id="empty" style="display:none"><span class="ei">🔍</span><h3 style="font-size:1rem;margin-bottom:.3rem">Keine Ergebnisse</h3><p style="font-size:.85rem">Versuche andere Filter oder Suchbegriffe.</p></div>
@@ -748,6 +747,14 @@ function doExportPDF(){
     doc.save('ZüriHub-Export-'+FLT.length+'.pdf');
   }catch(err){console.error('PDF Error:',err);alert('PDF-Export fehlgeschlagen: '+err.message)}
 }
+
+// Prevent zoom on all devices
+document.addEventListener('gesturestart',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('gesturechange',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('gestureend',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
+document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},{passive:false});
+document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&(e.key==='+'||e.key==='-'||e.key==='='||e.key==='0'))e.preventDefault()});
 
 init();
 </script>
